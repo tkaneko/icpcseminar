@@ -1,0 +1,102 @@
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{ulem}
+\usepackage{ascmac}
+\usepackage{fancybox}
+\usepackage{pifont}
+\usepackage{framed,textpos}
+\usepackage{alltt}
+\usepackage[noend]{algpseudocode}
+
+\usepackage{tikz}
+%\usetikzlibrary{matrix,arrows,decorations.pathmorphing}
+\usetikzlibrary{arrows,arrows.meta,chains,matrix,positioning,scopes,shapes,decorations.fractals}
+\usetikzlibrary{shapes}
+\usetikzlibrary{tikzmark}
+\usepackage{forest}
+\usepackage{gnuplot-lua-tikz}
+
+%%% colors
+\definecolor{iblue}{rgb}{0.363,0.387,0.617}%#5D639E
+\definecolor{igreen}{rgb}{0.64,0.77,0.125}%#A4C520
+\definecolor{iyellow}{rgb}{.85,0.698,0}% %#FFE600
+\definecolor{icyan}{rgb}{0.414,0.547,0.777}%#6A8CC7
+%\definecolor{ired}{rgb}{0.746,0.117,0.336}%#BF1E56
+\definecolor{ired}{rgb}{0.777,0.141,0.227}%#C7243A
+\newcommand{\cemphp}[1]{\textit{\textcolor{ired}{#1}}}
+\newcommand{\cemph}[1]{\cemphp{\underline{#1}}}
+\newcommand{\cemphtt}[1]{\texttt{\textcolor{ired}{\underline{#1}}}}
+
+%%% symbols
+\newcommand{\dingright}{\ding{"D4} }
+\newcommand{\dingrightsup}{\ding{"D8}}
+\newcommand{\dingrights}{\ding{"D9}}
+\newcommand{\dingrightsdown}{\ding{"DA}}
+\newcommand{\dingleft}{\reflectbox{\dingright} }
+\newcommand{\dingcheck}{\ding{"33}}
+\newcommand{\dingcross}{\ding{"35}}
+\newcommand{\dingboxfilled}{\ding{"6E}}
+\newcommand{\dingbox}{\ding{"6F}}
+
+\definecolor{shadecolor}{rgb}{0.963,0.987,0.917}
+
+%%% top align in tabular
+\def\imagetop#1{\vtop{\null\hbox{#1}}}
+
+%%% graph node
+\tikzstyle{city}=[draw=igreen,minimum size=6mm,%green!50!black
+  ellipse,ultra thick,inner sep=0pt]
+% visited
+\tikzstyle{vcity}=[draw=iyellow,dotted,minimum size=6mm,%fill=iredred!50!black!20
+  ellipse,ultra thick,inner sep=0pt]
+% current visiting
+\tikzstyle{ccity}=[fill=iyellow,draw=igreen,%green!50!black,green!50!black!20
+  minimum size=6mm,ellipse,ultra thick,inner sep=0pt]
+\tikzset{
+  ashadow/.style={opacity=.25, shadow xshift=0.07, shadow
+    yshift=-0.07},
+}
+
+
+%%% forest styles
+\forestset{
+  rootempty/.style={
+    for tree={{ultra thick,draw=igreen},ellipse,minimum width=5mm,minimum height=5mm,{fill=none},s sep=6mm},
+    for children={no edge},
+    %for tree={calign=fixed edge angles},
+    delay={where content={}{shape=coordinate,for siblings={anchor=north}}{}}
+},
+}
+
+% tikz:forest
+\forestset{sn edges/.style={
+for tree={{ultra thick,draw=igreen},%{fill=green!50!black!20}, green!50!black
+ellipse,
+inner sep=0pt,
+edge={thick,-{Triangle[]}},
+parent anchor=south, child anchor=north, 
+calign=fixed edge angles, 
+calign primary angle=-65, calign secondary angle=65, 
+align=center, base=t},
+delay={
+where content={}{shape=coordinate,
+for parent={for children={anchor=north}}}{}} 
+}}
+\forestset{ctree/.style={
+for tree={{ultra thick,draw=igreen},ellipse,minimum width=5mm,minimum height=5mm,{fill=none},s sep=6mm},
+delay={where content={}{shape=coordinate,
+for parent={for children={anchor=north}}}{}
+}}}
+\forestset{rtree/.style={
+for tree={{draw=ired},ellipse,%{fill=red!60!black!10},%red!50!black
+s sep=6mm},
+delay={
+where content={}{shape=coordinate,
+for parent={for children={anchor=north}}}{}} 
+}}
+\forestset{cnil/.style={
+for tree={{dashed=igreen},{fill=white},circle},
+delay={
+where content={}{shape=coordinate,
+for parent={for children={anchor=north}}}{}} 
+}}

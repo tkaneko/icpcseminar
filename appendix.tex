@@ -1,0 +1,1674 @@
+\chapter{バグとデバッグ}\label{chapter:debug}
+
+プログラムを書いて一発で思い通り動けば申し分ないが，そうでない場合も多
+いだろう．バグを埋めるのは一瞬だが，取り除くには2時間以上かかることもしばしばある．さらにCやC++を用いる場合には，動作が保証されないコードをうっか
+り書いてしまった場合の検知機構やエラーメッセージが不親切のため，原因追求に時間を
+要することもある．
+開発環境で利用可能な便利な道具に馴染んでおくと，原因追求の時間を減らせるかもしれない．
+特にプログラミングコンテストでは時間も計算機の利用も限られているので，
+チームで効率的な方法を見定めておくことが望ましい．
+
+\section{バグの予防とプログラミング作法}
+逆説的だが，デバッグの時間を減らすためには，バグを入れないために時間を
+かけることが有効である．その一つは，良いとされているプログラミングスタ
+イルを取り入れることである．
+様々な書籍があるので，自分にあったものを探すと良い．一部を紹介する．
+
+\paragraph{変数の活用} 変数を適切に使うとプログラムが見やすくなる
+
+悪い例: (点(x1,y1)と(x2,y2)が直径の両端であるような円の面積を求めている)
+\begin{cbox}
+double area = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/2
+ * sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/2 * 3.1415;\end{cbox}
+改善の例:
+\begin{cbox}
+double radius = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/2;
+double area = radius*radius*3.1415;\end{cbox}
+なぜ良いか:
+\begin{itemize}
+\setlength{\itemsep}{0pt}
+\item 人間に見やすい (x1をx2と間違えていないか確認する箇所が減る)
+\item タイプ/コピーペーストのミスがない
+\item 途中経過(この場合は半径)を把握しやすい．(デバッガやprintfで表示しやすい)
+\end{itemize}
+
+\paragraph{関数の活用} 同様に見通しの良いプログラムとなる．
+  \begin{cbox}
+double square(double x) { return x*x; }
+double norm(double x1, double y1, double x2, double y2) {
+  return square(x2-x1)+ square(y2-y1);
+}
+double circle_area(double r) { return r*r*3.1415; }\end{cbox}
+\paragraph{定数の活用} 定数にも名前をつけると見通しが良い．
+  \begin{cbox}
+const double pi = 3.1415;
+const double pi = atan2(0.0,-1.0);    
+\end{cbox}
+\paragraph{変数のスコープはなるべく短くする} 
+変数のスコープは短ければ短いほど良い．関連して，変数の再利用は避け，
+一つの変数は一つの目的のみに使うことが良い．
+\begin{cbox}[emph={j}]
+int i, j, k;
+// この辺に j や k を使う関数があったとする
+...
+int main() {
+  for (i=0; j<5; ++i) // ああっ!
+    cout << "Hello, world" << endl;
+  ...
+}
+\end{cbox}
+関数毎に必要な変数を宣言すると状況が大分改善する．
+\begin{cbox}
+int main() {
+  int i;
+  for (i=0; j<5; ++i) // コンパイルエラー
+    cout << "Hello, world" << endl;
+}
+\end{cbox}
+しかし，C++ や Java など最近の言語では，for 文の中でループに用いる変数
+を宣言できるので，こちらを推奨する．
+\begin{cbox}
+int main() {
+  for (int i=0; i<5; ++i) 
+    cout << "Hello, world" << endl;
+}
+\end{cbox}
+\paragraph{有名な落とし穴を避ける} あらかじめ学んでおくと良いことがある．
+    C言語 FAQ \url{http://www.kouno.jp/home/c_faq/} 特に16 奇妙な問題
+\paragraph{コンパイラのメッセージを理解しておく} コンパイラは，時として親切な指摘をしていることがある．それらを無視しないようにする．
+  \begin{itemize}
+  \item ``if-parenth.cc:8:14: warning: suggest parentheses around assignment used as truth value''
+\begin{cbox}
+  if (a = 1) return 1;
+  if (a =! 1) cout << "ok";
+\end{cbox}
+\item ``no return statement in function returning non-void [-Wreturn-type]''
+\begin{cbox}
+int add(int a, int b) {
+  a+b; // 正しくは \cemph{return} a+b;
+}
+\end{cbox}
+  \end{itemize}
+
+\section{デバッグの道具}
+
+\subsection{道具: assert}
+
+プログラムの理解と実行時のテストのために C, C++, Python, Java などの主要言語で，\tindex{assert}という仕組みが用意されている．
+assert 文は，プログラム実行時に条件式を検査し，真であればなにもせず，偽の時にはエラー
+メッセージを表示して停止する．
+
+\paragraph{コード例}
+階乗の計算:
+\begin{cbox}[emph={factorial}]
+int factorial(int n) {
+  if (n == 1)
+    return 1;
+  return n * factorial(n-1);
+}
+int main() {
+  cout << factorial(3) << endl; // 3*2*1 = 6 を出力
+  cout << factorial(-3) << endl; // 手が滑ってマイナスをいれてしまったら，止まらない
+}
+\end{cbox}
+
+上記の関数は，引数nが正の時のみ正しく動く．
+実行時に，引数nが正であることを保証したい．そのためには，cassertヘッダをincludeした上で，assert文を加える．見て分かるようにassertの括弧内に，保証したい内容を条件式で記述する．
+\begin{cbox}[emph={cassert,assert}]
+#include <cassert> // 追加
+int factorial(int n) {
+  assert(n > 0); // 追加
+  if (n == 1)
+    return 1;
+  return n * factorial(n-1);
+}
+\end{cbox}
+
+このように，何らかの「前提」にのっとってプログラムを書く場合は，そのこ
+とをソースコード中に「表明」しておくと見通しが良い．
+
+このようにして\texttt{factorial(-1)}等を呼び出すと，エラーを表示して止まる．
+
+\begin{terminal}
+Assertion failed: (n > 0), function factorial, file factorial.cc, line 3.
+\end{terminal}
+
+\texttt{assert}は実行時のテストであるので，実行速度の低下を起こしうる．
+そのために，ソースコードを変更することなくassertを全て無効にする手法が容易されている．
+たとえば以下のように，cassertヘッダをincludeする*前*にNDEBUGマクロを定義する
+\begin{cbox}[emph={NDEBUG}]
+#ifndef NDEBUG
+#  define NDEBUG
+#endif
+#include <cassert>
+\end{cbox}
+
+assertはPythonでも使用可能である．\texttt{python3 -O}のようにオプション-Oを付けて起動すると，\texttt{assert}文は無効化される．
+
+\begin{pybox}[emph=assert]
+def factorial(n):
+    assert n >= 0
+    if n == 0:
+        return 1
+    return n*factorial(n-1)
+\end{pybox}
+
+assertはJavaでも使用可能である．
+\begin{javabox}[emph={Main,assert}]
+public class Main {
+    static int factorial(int n) {
+	assert n >= 0;
+	if (n == 0) return 1;
+	return n*factorial(n-1);
+    }
+    public static void main(String[] args) {
+	System.out.println(factorial(3));  // これは成功する
+	System.out.println(factorial(-3)); // これは...
+    }
+}
+\end{javabox}
+
+Javaの場合は，実行時オプションで\texttt{-ea}をつけると(つけたときのみ)assertが有効になる．
+\begin{terminal}
+$ java -ea Main
+6
+Exception in thread "main" java.lang.AssertionError
+	at Main.factorial(Main.java:3)
+	at Main.main(Main.java:10)  
+\end{terminal}
+
+\subsection{道具: -fsanitize}\label{section:cpp-sanitize}
+比較的新しいC++では，\texttt{-fsanitize=undefined}, \texttt{-fsanitize=address}などのコンパイルオプションが利用可能である．
+これらのオプションは，「不正なプログラムを書いたが，そのことが分からない，あるいは場所が特定できない」という時に役に立つ．
+
+次のプログラムの関数\texttt{fib}は引数\texttt{i==0}の時に値を返さないバグがある．
+\begin{cbox}
+#include <iostream>
+using namespace std;
+int fib(int i) {
+  if (i == 1) return 1; // i==0の場合を書き忘れ
+  else if (i >= 2) return fib(i-1)+fib(i-2);
+}
+int main() {
+  cout << fib(2) << endl;
+}  
+\end{cbox}
+
+以下のように\texttt{-fsanitize=undefined}オプションを有効にした場合に，実行時エラーが検知される．
+\begin{terminal}[emph={fsanitize,undefined}]
+$ g++ -Wall fib.cc
+$ ./a.out
+2  
+$ g++ -Wall -fsanitize=undefined fib.cc
+$ ./a.out 
+fib.cc:3:5: runtime error: execution reached the end of a value-returning function without returning a value
+Abort trap: 6
+\end{terminal}
+
+次の(うっかりな)プログラムは，キーボードから読んだ整数が0以上3以下の場合にのみ正常動作する．
+\begin{cbox}
+#include <iostream>
+using namespace std;
+int A[4] = {0,1,2,3};
+int f(int idx) {
+  return A[idx];
+}
+int main() {
+  int idx;
+  cin >> idx;
+  cout << f(idx) << endl;
+}
+\end{cbox}
+
+\texttt{-fsanitize=undefined}をつけてコンパイルすると，5行目で違反が起こったことを知らせてくれる．
+\begin{terminal}[emph={fsanitize,undefined}]
+$ g++ -Wall -fsanitize=undefined test.cc
+$ ./a.out 
+|3|
+3
+$ ./a.out 
+|8|
+test.cc:5:10: runtime error: index 8 out of bounds for type 'int [4]'
+\end{terminal}
+
+
+\texttt{-fsanitize=undefined}は便利だが万能ではない．
+メモリ関係の実行時エラーは\texttt{-fsanitize=address}で発見出来ることもある．
+以下のプログラムは\text{i=4}の時に不正なアドレスにアクセスする.
+\begin{cbox}
+#include <iostream>
+using namespace std;
+int A[4]={0,1,2,3};
+int main() {
+  int *p = A;
+  for (int i=0; i<5; ++i) // 5は4の誤り
+    cout << *(p+i) << endl;
+}  
+\end{cbox}
+\texttt{-fsanitize=undefined}をつけてもこの不正なメモリアクセスは検知されず，何事もなかったかのように実行される．
+\begin{terminal}[emph={fsanitize,undefined}]
+$ g++ -Wall -fsanitize=undefined addr.cc 
+$ ./a.out 
+0
+1
+2
+3
+8842826
+\end{terminal}
+
+\texttt{-fsanitize=address}をつけてコンパイルすると，不正なメモリアクセスが検知される．
+\begin{terminal}[emph={fsanitize,address}]
+$ g++ -Wall -fsanitize=address addr.cc 
+$ ./a.out 
+0
+1
+2
+3
+=================================================================
+==37898==ERROR: AddressSanitizer: global-buffer-overflow on address 0x000107f8d110 at pc 0x000107f8c8ea bp 0x7ffee7c74970 sp 0x7ffee7c74968
+READ of size 4 at 0x000107f8d110 thread T0
+    #0 0x107f8c8e9 in main (a.out:x86\_64+0x1000018e9)
+    #1 0x7fff50332014 in start (libdyld.dylib:x86\_64+0x1014)
+\end{terminal}
+
+\subsection{道具: \_GLIBCXX\_DEBUG (G++)}
+
+G++の場合，\texttt{\_GLIBCXX\_DEBUG}を先頭でdefineしておくと，多少はミスを見つけてくれる．
+(\url{http://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode_using.html#debug_mode.using.mode})
+
+\begin{cbox}[emph={_GLIBCXX_DEBUG}]
+#define _GLIBCXX_DEBUG
+#include <vector>
+using namespace std;
+int main() {
+    vector<int> a;
+    a[0] = 3; // 長さ0のvectorに代入する違反
+}
+\end{cbox}
+
+実行例: (単にsegmentation faultするのではなく，out-of-boundsであることを教えてくれる)
+\begin{terminal}
+/usr/include/c++/4.x/debug/vector:xxx:error: attempt to subscript container 
+    with out-of-bounds index 0, but container only holds 0 elements.
+\end{terminal}
+
+\subsection{道具: gdb}
+
+以下のように手が滑って止まらない for 文を書いてしまったとする．
+\begin{cbox}
+int main() { // hello hello world と改行しながら繰り返すつもり
+  for (int i=0; i<10; ++i) {
+    for (int j=0; j<2; ++i)
+      cout << "hello " << endl;
+    cout << "world" << endl;
+  }
+}
+\end{cbox}
+
+gdb を用いる準備として，コンパイルオプションに\texttt{-g}を加える．
+\begin{terminal}[emph={g}]
+$ g++ -g -Wall filename.cc
+\end{terminal}
+
+実行する際には，gdbにデバッグ対象のプログラム名を与えて起動し，gdb内部でrunとタイプする
+\begin{terminal}[emph={gdb,a.out,run,bt,up,list,p}]
+$ gdb ./a.out
+(gdbが起動する)
+(gdb) run # (通常の実行)
+(gdb) run < sample-input.txt # (リダイレクションを使う場合)
+# ...(プログラムが実行する)...
+# ...(Ctrl-Cをタイプするか，segmentation faultなどで停止する)
+(gdb) bt
+(gdb) up // 何回かupしてmainに戻る
+(gdb) up
+#12 0x080486ed in main () at for.cc:6
+6	      cout << "hello " << endl;
+(gdb) list
+1	#include <iostream>
+2	using namespace std;
+3	int main() {
+4	  for (int i=0; i<10; ++i) {
+5	    for (int j=0; j<2; ++i)
+6	      cout << "hello " << endl;
+7	    cout << "world" << endl;
+8	  }
+9	}
+(gdb) p i
+$1 = 18047
+(gdb) p j
+$2 = 0
+\end{terminal}
+
+主なコマンド:
+\begin{itemize}
+\setlength{\itemsep}{0pt}
+\item 関数の呼び出し関係の表示 bt
+\item 変数の値を表示: p 変数名
+\item 一つ上(呼び出し元)に移動: u
+\item ソースコードの表示: list
+\item ステップ実行: n, s
+\item 再度実行: c
+\item gdbの終了: q
+\end{itemize}
+
+ソースコードの特定の場所に来た時に中断したり，変数の値が書き換わったら
+中断するようなこともできる．詳しくはマニュアル参照．
+
+\subsection{道具: valgrind }
+
+\begin{cbox}
+int main() {
+    int p; // 初期化忘れ
+    printf("
+}  
+\end{cbox}
+
+gdbを用いる時と同様に\texttt{-g}オプションをつけてコンパイルする．
+\begin{terminal}[emph={g}]
+$ g++ -g -Wall filename.cc
+\end{terminal}
+
+実行時は，valgrindコマンドに実行プログラムを与える．
+
+\begin{terminal}[emph={valgrind,a.out}]
+$ valgrind ./a.out
+Conditional jump or move depends on uninitialised value(s)
+...
+\end{terminal}
+
+\section{標本採集: 不具合の原因を突き止めたら}
+
+バグの原因を特定したら，標本化しておくと将来のデバッグ時間を減らすための資産として活用できる．「動いたからラッキー」として先に進んでしまうと，何も残らない．本筋とは離れるが，問題の制約を見落としたり，文章の意味を誤解したために詰まったなどの状況でも，誤読のパターンも採集しておくと役に立つだろう．
+
+配列の境界
+\begin{cbox}
+    int array[3];
+    printf("
+\end{cbox}
+
+初期化していない変数
+\begin{cbox}
+    int array[3];
+    int main() {
+      int a;
+      printf("
+    }  
+\end{cbox}
+
+returnのない関数
+\begin{cbox}
+int add(int a, int b) {
+  a+b; // 正しくは \cemph{return} a+b;
+}
+int main() {
+  int a=1,b=2;
+  int c=add(a,b); // cの値は不定  
+}
+\end{cbox}
+
+stack溢れ
+\begin{cbox}
+  int main() {
+    int a[100000000]; // global変数に移した方が良い
+  }
+\end{cbox}
+
+不正なポインタ
+\begin{cbox}
+int *p;
+*p = 1;  
+
+char a[100];
+double *b = &a[1];
+*b = 1.0;
+\end{cbox}
+
+文字列に必要な容量: 最後には終端記号'\textbackslash{}0'が必要
+\begin{cbox}  
+    char a[3]="abc"; // 正しくは a[4] = "abc" もしくは a[] = "abc"
+    printf("
+\end{cbox}
+
+// A[i] (iの範囲は$[0,N-1]$)を逆順に表示しようとして
+\begin{cbox}
+for (unsigned int i=N-1; i>0; ++i)
+  cout << A[i] << endl;
+\end{cbox}
+
+
+// 整数を２つ読みたい
+\begin{purecbox}
+int a, b;
+scanf("
+\end{purecbox}
+\begin{cbox}
+int a, b;
+cin >> a, b;
+\end{cbox}
+
+
+\chapter{プログラミング言語と環境の理解}
+\section{ループ不変条件}\label{chapter:loop-invariants}
+
+
+以下のような，簡単な\texttt{for}文の正しさについて考えてみよう．
+
+\begin{terminal}[emph={}]
+def 名前(仮引数1, 仮引数2...):
+    変数 = 初期値
+    for ...
+      変数 = 式 # 変数を新しい値に書き換え
+    return 変数
+\end{terminal}
+
+以下の例題と回答例を考える．
+
+\begin{psbox}{連続する数の和 (sum\_to\_n)}{judgeなし}
+  整数1から$n$までの合計を，愚直に足して求める関数\texttt{sum\_to\_n(n)}を作成せよ．ただし$1<n$とする．
+  (n=10000などで検算する)
+\end{psbox}
+
+回答例:
+\begin{pybox}
+def sum_to_n(n):
+    sum = 0
+    for i in range(1, n+1):
+        sum = sum + i
+    return sum
+\end{pybox}
+このようなプログラムがどのように導かれるか追ってみよう．
+
+仮に固定値である3までの合計であれば，シンプルに記述可能である．
+\begin{pybox}
+def sum3():
+    return 1+2+3
+\end{pybox}
+補助変数$s_i$ (0からiまでの和)を用いて，等価なプログラムに書き直すこともできる．
+\begin{pybox}
+def sum3():
+    s0 = 0 # 空集合の和
+    s1 = s0 + 1 # 1の和
+    s2 = s1 + 2 # 1と2の和
+    s3 = s2 + 3 # 1と2の3の和
+    return s3
+\end{pybox}
+
+代入を用いると，補助変数$s_i$ を一つの変数\texttt{sum}で表現することもできる．
+\begin{pybox}
+def sum3():
+    sum = 0 # sumはs0 相当
+    sum = sum + 1 # 左辺のsumはs1, 右辺のsumはs0 相当
+    sum = sum + 2
+    sum = sum + 3
+    return sum # sumはs3相当
+\end{pybox}
+これを\texttt{for}で書き換えたものが，冒頭の回答例である．
+
+\begin{pybox}[emph=sum]
+def sum_to_n(n):
+    sum = 0
+    for i in range(1, n+1):
+        # (a) この時点でsumの値は 0 から i-1までの和
+        sum = sum + i  # なお，sum += i と書いても同じ
+        # (b) この時点でsumの値は 0 から iまでの和
+    return sum
+\end{pybox}
+コメント(a)(b)に記述したsumの値に関する条件が，ループのどの時点でも成り立つ
+ことを確認してほしい．このような条件を，\texttt{ループ不変条件}という．
+これらのsumの値に関する条件を用いて，関数がnまでの和を計算することを証明することができる．
+
+\section{再帰}\label{section:recursion}
+
+\subsection{帰納的定義と線形再帰}\label{section:linear}
+
+「何かを繰り返して計算したい」状況を考える．\texttt{while} や \texttt{for} のような
+反復・\textbf{ループ}によって書く方法と，関数の中から自分自身を呼び出す\jindex{再帰}{さいき} (\eindex{recursion})によって計算する方法がある．
+ここでは後者について掘り下げる．
+
+例として，$1+2+\cdots+n$に相当する関数を，\jindex{漸化式}{ぜんかしき}で定義してみよう．
+この関数を$\mbox{sum}(n)$ と書くことにすると，次のように帰納的に定義できる．
+\[
+        \mbox{sum}(n) = \left\{
+        \begin{array}[c]{ll}
+          1 & \mbox{$n=1$ のとき}\\
+          n + \mbox{sum}(n-1) & \mbox{それ以外}
+        \end{array}
+      \right.
+\]
+この定義の中では sum 自身を使っていることに注意．
+これは，ほとんどそのまま PythonやC++ の定義に置き換えることができる:
+\begin{cbox}[emph={sum}]
+int sum(int n) {
+  if (n == 1) return 1;
+  else return n + sum(n-1);
+}
+\end{cbox}
+\begin{textblock}{3}(4,-1.2)
+\begin{shaded*}
+\noindent
+赤字の \textcolor{ired}{sum} が，\\
+再帰の構造になっている．
+\end{shaded*}
+\end{textblock}
+\begin{pybox}[emph={sum1}]
+def sum1(n):
+    if n == 1:
+        return 1
+    else:
+        return n + sum1(n-1)
+\end{pybox}
+
+\paragraph{プログラムの正しさの理解} 次の二点を確認すると良い
+\begin{itemize}
+\item basecaseの正しさを確認: $n=1$のとき \texttt{sum1(n)}$=1$
+\item $n-1$まで正しいと仮定して$n$の正しさを確認: \texttt{sum1(n)}$=n+$\texttt{sum1(n-1)}
+\end{itemize}
+
+\subsection{枝分かれを伴う再帰}\label{section:branching}
+ここまで見た再帰呼び出しでは，1つの関数からその関数を1回だけ呼びしてい
+た．これ以降は，複数の再帰を呼び出す場合を扱う．
+
+
+\begin{psbox}{フィボナッチ数}{judge無し}
+フィボナッチ数列(\eindex{Fibonacci numbers})とは、\[
+        0, 1, 1, 2, 3, 5, 8, 13, 21, \ldots
+\]のように、「前 2 つの数の和」で作られる数の列である。
+$n$ 番目のフィボナッチ数 $\mathit{fib}(n)$を帰納的に定義せよ。
+また、関数\texttt{fib(n)}を定義せよ。
+\end{psbox}
+
+\begin{pybox}
+def fib(n):
+    print("fib",n) # 関数呼び出しの際に引数を表示
+    if n == 0:
+        return 0
+    elif n == 1:
+        return 1
+    else:
+        return fib(n-2)+fib(n-1)
+\end{pybox}
+
+なお再帰はfibonacci数を計算することに関しては最善の方法ではない。より効率良くフィボナッチ数を求める方法は別に扱う)。
+
+
+\paragraph{末尾再帰(tail recursion)}
+
+式を少し変形した，
+次の定義の$\mbox{sum}'(s,n)$ を考える．
+\[
+        \mbox{sum}'(s,n) = \left\{
+        \begin{array}[c]{ll}
+          s+1 & \mbox{$n=1$ のとき}\\
+          \mbox{sum}'(s+n, n-1) & \mbox{それ以外}
+        \end{array}
+      \right.
+\]
+上記の定義中の$s$は，「これまでの和」に相当すると考えて，$\mbox{sum}(n) = \mbox{sum}'(0,n)$であることを確認せよ．
+
+
+\begin{pybox}[emph={sum2}]
+def sum2(s,n):
+    if n == 1:
+        return s+1
+    else:
+        return sum2(s+n, n-1)
+\end{pybox}
+
+返り値として自分自身を呼ぶ構造を\jindex{末尾再帰}{まつびさいき}と呼ぶ．このように書いておくと，コンパイラが最適化しやすいというメリットがある．
+
+また，$s$のような補助的な変数を導入すると再帰の見通しがよくなることがある．
+
+
+
+
+
+\begin{tipsbox}{maximum recursion depth exceeded}
+再帰関数は，どこかで止まるように実装する必要がある．たとえば以下の関数は止まるところが定義されていない．
+\begin{pybox}
+def inf(a):
+    return 1+inf(a)
+\end{pybox}
+この関数を\texttt{inf(0)}と呼び出すと，
+\begin{terminal}[name=RecursionError]
+>>> inf(0)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 2, in inf
+  File "<stdin>", line 2, in inf
+  File "<stdin>", line 2, in inf
+  [Previous line repeated 995 more times]
+RecursionError: maximum recursion depth exceeded
+\end{terminal}
+というように，\texttt{RecursionError: maximum recursion depth exceeded}というエ
+ラーで処理を続行できなくなった旨表示される．
+
+\end{tipsbox}
+
+\medskip
+
+\paragraph{動作に関する再帰的な考え方}
+例題として1からnまでの整数を表示するという動作\texttt{print\_range(n)}を考える．先程の\texttt{sum}と同様に以下のように動作を定義できる．
+\[
+        \mbox{\cemph{print\_range}}(n) = \left\{
+        \begin{array}[c]{ll}
+          1\text{を表示} & \mbox{$n=1$}\\
+          \mbox{\cemph{print\_range}}(n-1) \; \langle\text{後に}\rangle
+          \; n\text{を表示} & \mbox{それ以外}
+        \end{array}
+      \right.
+\]
+
+\begin{pybox}[emph={print_range}]
+def print_range(n):
+  if n == 1:
+    print(1)
+  else:
+    print_range(n-1)
+    print(n)
+\end{pybox}
+
+
+\begin{psbox}{m進数}{judge無し}
+  整数m,nが与えられる($1\le n \le
+  8$, $1 < m \le 10$)．
+  n桁のm進数を小さい順に全て表示する関数\texttt{mdigit(m,n)}を作成せよ．
+\end{psbox}
+
+\begin{terminal}
+>>> mdigit(3,2)
+00
+01
+02
+10
+11
+12
+20
+21
+22
+\end{terminal}
+
+簡単のため$m=2$すなわち$2$進数を考える．正の整数$n$に対して目的を達
+する手続きを，$n-1$に対して同様の処理を行う手続きを元に組み立てたい．
+つまり，$n-1$桁の$2$進数を全部表示する関数を誰かが作ってくれていたとして(*1)，それを元に
+$n$桁の$m$進数を全部表示する関数を作れるだろうか．
+
+$n$桁の$2$進数は左端の1文字($0$ま
+たは$1$)と残り$n-1$桁の$2$進数に分解できる．
+そこで，左端に\emph{$0$を追加して}$n-1$桁の$2$進数を全部表示する，
+左端に\emph{$1$を追加して}$n-1$桁の$2$進数を全部表示する，というようなことをしたい．
+
+上記を踏まえて(*1)の関数を微調整して，左端に書いてほしい文字列prefixを引数に追加し，
+引数prefixとnに対して，「n桁の2進数を全て生成して，それぞれに
+  prefixをつけて表示する」という関数を\texttt{B}(prefix, n)とする．
+
+\begin{equation}
+  \texttt{B}(\text{prefix},n) = \left\{
+  \begin{array}{ll}
+    \text{prefixを表示} & (n=0)\\
+    \texttt{B}(\text{prefix} + 0, n-1) \texttt{と}\\
+    \texttt{ B}(\text{prefix} + 1, n-1) \texttt{を実行}& (n>1)
+  \end{array}\right.\label{eq:rec-mn}
+\end{equation}
+
+\begin{center}
+  \newcolumntype{G}{>{\columncolor[gray]{0.8}}c}
+  \newcommand{\gr}[1]{\textcolor{gray}{#1}}
+  \begin{tabular}{ll}
+    \begin{minipage}{.4\linewidth}
+      \begin{tabular}{Gcc}
+        \multicolumn{1}{c}{prefix} & 3 & 2,1\\\hline
+  10&0&\tikzmark{recmn0}\cellcolor{blue!10}00\\
+  \gr{10}&\gr{0}&\cellcolor{blue!10}01\\
+  \gr{10}&\gr{0}&\cellcolor{blue!10}10\\
+  \gr{10}&\gr{0}&\cellcolor{blue!10}11\\\hdashline
+  \gr{10}&1&\tikzmark{recmn1}\cellcolor{green!10}00\\
+  \gr{10}&\gr{1} &\cellcolor{green!10}01\\
+  \gr{10}&\gr{1} &\cellcolor{green!10}10\\
+  \gr{10}&\gr{1} &\cellcolor{green!10}11
+\end{tabular}
+    \end{minipage}
+    &
+    \begin{minipage}{.2\linewidth}
+\begin{tikzpicture}[remember picture,overlay]
+\draw [dotted] (pic cs:recmn1) rectangle (pic cs:recmn1)+(1em,.7ex);
+
+
+\draw[<-] ([xshift=2em]pic cs:recmn0) -- ++(0:5em) coordinate (aux0);
+\node[right] at (aux0) {B(100,2)を通じて実現};
+
+\draw[<-] ([xshift=2em]pic cs:recmn1) -- ++(0:5em) coordinate (aux1);
+\node[right] at (aux1) {B(101,2)を通じて実現};
+
+\end{tikzpicture}
+    \end{minipage}
+  \end{tabular}\\
+\texttt{B(10,3) の動作: B(100,2)とB(101,2)}
+\end{center}
+
+
+\texttt{B(0,n)}が，$n$桁の2進数を全て表示することを確認せよ．2進数だけでなく$m$進数に対応するには，$0$と$1$のみ分岐させていた部分を，\texttt{for}文などで$0$から$m-1$まで分岐させれば良い．
+
+prefixは文字列(\texttt{str})を想定して説明したが，
+\texttt{int}で表現しても良い．その場合，たとえば，prefixの右に1を加える操作は，\texttt{prefix*10+1}となる．
+
+文法: Pythonで，整数aをN桁で表示し，桁が足りない際に0を補うには以下のように行う．
+\begin{pybox}
+>>> print("{:05d}".format(3))
+00003
+\end{pybox}
+
+
+\subsection{関数と実行状態の管理}\label{section:stackframe}
+
+「文が上から下に実行されることと再帰呼び出しの関係」について，
+補足する．
+
+\paragraph{通常の関数呼び出しの場合}
+
+多少作為的だが，次のようなソースコードがあったとする．関数\texttt{helloworld}を実行すると，\texttt{hello}と\texttt{world}が一行づつ表示される．
+\begin{pybox}
+def mynewline():
+    print("")
+
+def myprint(msg): # メッセージを書いて改行する
+    print(msg, end="")
+    mynewline()
+
+def helloworld():
+    myprint("hello")
+    myprint("world")
+\end{pybox}
+
+この実行過程の一部を図で模式的に表すと以下のようになる．
+C++を含む多くのプログラミング言語では，関数を呼ぶ(call)とその関数の実行状態やlocal変数を管理する\jindex{フレーム}{ふれーむ}が作られる．下図ではフレームを枠囲みで表した．
+
+\begin{tabular}{lll}
+  \begin{minipage}{.3\linewidth}
+  \begin{itembox}[l]{helloworld()}
+    \begin{alltt}
+myprint("hello")\tikzmark{callhello}
+myprint("world")\tikzmark{callworld}
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+&
+  \begin{minipage}{.3\linewidth}
+  \begin{itembox}[l]{\tikzmark{hello}myprint(msg=hello)}
+    \begin{alltt}
+print(msg, end="")
+\tikzmark{mpend}mynewline()\tikzmark{callnl}
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+&
+  \begin{minipage}{.3\linewidth}
+  \begin{itembox}[l]{\tikzmark{nl}mynewline()}
+    \begin{alltt}
+\tikzmark{nlend}print("")
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+\\
+&
+  \begin{minipage}{.3\linewidth}
+  \begin{itembox}[l]{\tikzmark{world}myprint(msg=world)}
+    \begin{alltt}
+print(msg, end="")
+mynewline()
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+&
+\end{tabular}
+
+\begin{tikzpicture}[remember picture]
+\draw[->,overlay,ultra thick,iblue,bend left=20,yshift=5](pic cs:callhello) to node[above,iblue] {(1)} (pic cs:hello);
+\draw[->,overlay,ultra thick,iblue,bend left=20,yshift=5](pic
+cs:callnl) to node[left,iblue] {(2)} (pic cs:nl);
+\draw[->,overlay,ultra thick,dotted,iblue,bend left=20,yshift=-5](pic cs:nlend) to node[above,iblue] {(3)} (pic cs:callnl);
+\draw[->,overlay,ultra thick,dotted,iblue,yshift=-5](pic cs:mpend) to node[above left,iblue] {(4)} (pic cs:callhello);
+\draw[->,overlay,ultra thick,iblue,bend right=20](pic cs:callworld) to node[below,iblue] {(5)} (pic cs:world);
+\end{tikzpicture}
+
+各フレーム内で見た時に，文は書かれた順に実行される．たとえば，一番左の\texttt{helloworld}のフレームにおいて
+\texttt{myprint("hello")}の実行が完了してから\texttt{myprint("world")}の実行が開始される．
+\texttt{myprint("hello")}の実行が完了するとは，\texttt{myprint}関数の呼び出しが実行され(矢印(1))，そのフレーム内で，全ての文の実行を終えて制御が戻る(矢印(4))ことである．その過程では\texttt{mynewline}関数も実行される(矢印(2),(3))．
+矢印(3)や(4)のように,あるフレームで全ての文の実行を終えるか\texttt{return}が起こると，呼び出し元の適切な位置に制御が戻される．
+
+
+\paragraph{再帰の場合} 再帰の場合も同様に，呼出し毎にフレームが作られる．
+\ref{section:branching}節のm進数の例題を以下のように実装したとする．
+
+\begin{pybox}[emph={B}]
+def B(prefix, n):
+    if (n==0):
+        ...
+        return
+    B(prefix+"0", n-1)
+    B(prefix+"1", n-1)
+\end{pybox}
+
+この時、\texttt{B("",3)}の呼出しは，以下のように進行する．
+
+\begin{tabular}{@{}llll@{}}
+  \begin{minipage}{.2\linewidth}
+  \begin{itembox}[l]{B("", n=3)}
+    \begin{alltt}
+B(""+"0",2)\tikzmark{callB02}
+B(""+"1",2)
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+&
+  \begin{minipage}{.21\linewidth}
+  \begin{itembox}[l]{\tikzmark{B02}B("0", n=2)}
+    \begin{alltt}
+B("0"+"0",1)\tikzmark{callB001}
+B("0"+"1",1)
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+&
+  \begin{minipage}{.23\linewidth}
+  \begin{itembox}[l]{\tikzmark{B001}B("00", n=1)}
+    \begin{alltt}
+B("00"+"0",0)\tikzmark{callB0000}
+B("00"+"1",0)\tikzmark{callB0010}
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+&
+  \begin{minipage}{.23\linewidth}
+  \begin{itembox}[l]{\tikzmark{B0000}B("000", n=0)}
+    \begin{alltt}
+\tikzmark{B0000end}if (n==0) ...
+\end{alltt}
+  \end{itembox}
+  \begin{itembox}[l]{\tikzmark{B0010}B("001", n=0)}
+    \begin{alltt}
+if (n==0) ...
+\end{alltt}
+  \end{itembox}
+  \end{minipage}
+\end{tabular}
+
+\begin{tikzpicture}[remember picture]
+\draw[->,overlay,ultra thick,iblue,bend left=20,yshift=5](pic cs:callB02) to node[above,iblue] {(1)} (pic cs:B02);
+\draw[->,overlay,ultra thick,iblue,bend left=20,yshift=5](pic
+cs:callB001) to node[above,iblue] {(2)} (pic cs:B001);
+\draw[->,overlay,ultra thick,iblue,bend left=20,yshift=5](pic
+cs:callB0000) to node[above,iblue] {(3)} (pic cs:B0000);
+\draw[->,overlay,ultra thick,dotted,iblue,yshift=-5](pic
+cs:B0000end) to node[above,iblue] {(4)} (pic cs:callB0000);
+\draw[->,overlay,ultra thick,iblue,bend right=20,yshift=5](pic
+cs:callB0010) to node[below,iblue] {(5)} (pic cs:B0010);
+\end{tikzpicture}
+
+ソースコード上は同じ関数であっても，呼出し毎に異なるフレームが作成されることに注意する．
+それぞれのフレームごとに，引数，ローカル変数やどこまで実行したか，などの情報を維持する．
+このような情報の管理のために,\jindex{スタック領域}{すたっくりょういき}が用いられる(データ構造のスタックとは異なる)．
+実行が完了したフレームは破棄されるが，完了していないフレームはメモリ上に維持する必要がある．そのため，何段も関数を呼び出すと(たとえば100万)，実行時エラーになる場合がある．たとえば標準演習環境では，8メガバイトが限度である．\index{ulimit}
+\begin{terminal}
+ssh0-01m:~ 0123456789$ ulimit -a
+...
+stack size              (kbytes, -s) 8192
+...
+\end{terminal}
+
+\section{整数型の理解}\label{section:long-long}
+
+本資料では，整数の表現として\texttt{int}と\texttt{long long}という型を必要に応じて使い分ける．両者では表現できる数の範囲に差がある．
+
+\begin{cbox}
+    long long a = 1000000;
+    int b = 1000000;
+    cout << a * a << endl; // 1000000000000
+    cout << b * b << endl; // -727379968 (オーバーフロー)
+\end{cbox}
+
+通常，C++で整数は\texttt{int}型の変数で表現する．一方，この演習のiMac環境では，表\ref{table:nlimits}のように，
+\texttt{int}型や他の\jindex{整数型}{せいすうがた}で表現できる値の範囲には限りがある．
+
+先程の例では，
+$$1\,000\,000 \cdot 1\,000\,000 = 10^{12} > 2^{31} \approx 2\cdot10^{9}$$
+と32bit整数で表現できる範囲を超える．
+つまり，このような場合は\eindex{long long}型を使う必要がある．このことを\cemph{プログラムを書き始める前}に把握できるようになることが，目標の一つである．\footnote{このような計算をスラスラと行うために$2^{10}=1\,024\approx10^3$を暗記しておくことを勧める．}
+
+\begin{table}
+  \centering
+  \caption{この資料が想定する環境での，符号付き整数の表現}
+  \label{table:nlimits}
+  \begin{tabular}{l|rrrl}\hline
+    type & bits & 下限 & 上限 & 備考\\\hline
+    \cemphtt{int} & $32$ & $-2^{31}$ & $2^{31}-1$ & 約20億\\
+    \texttt{long} & $32/64$ & & & 使用を勧めない\\
+    \cemphtt{long long} & $64$ & $-2^{63}$ & $2^{63}-1$ & C++11から標準型，以前はgcc拡張\\
+    \texttt{\_\_int128\_t} & 128 & & & gcc拡張，portableでないが強力\\\hline
+  \end{tabular}
+\end{table}
+
+各型で表現可能な範囲は環境によって異なりうる．使用中の環境については，以下のようなプログラムを用いて確認できる．\texttt{numeric\_limits}の文法は割愛するが，興味のあるものはテンプレートクラスと標準ライブラリについて調べると良い\cite{book:cpp}．
+\begin{cbox}[emph={limits}]
+#include <limits>
+#include <iostream>
+using namespace std;
+int main() {
+  cout << sizeof(int) // バイト数
+       <<' '<< numeric_limits<int>::digits // 符号以外のbit数
+       <<' '<< numeric_limits<int>::digits10 // 十進桁数
+       <<' '<< numeric_limits<int>::min()
+       <<' '<< numeric_limits<int>::max()
+       << endl;
+  cout << sizeof(long long)
+       <<' '<< numeric_limits<long long>::digits
+       <<' '<< numeric_limits<long long>::digits10
+       <<' '<< numeric_limits<long long>::min()
+       <<' '<< numeric_limits<long long>::max()
+       << endl;
+}  
+\end{cbox}
+\begin{terminal}
+$ ./a.out
+4 31 9 -2147483648 2147483647
+8 63 18 -9223372036854775808 9223372036854775807  
+\end{terminal}
+
+なお表\ref{table:nlimits}には\jindex{符号付き整数}{ふごうつきせいすう}のみ記載した．\jindex{符号なし整数}{ふごうなしせいすう}
+(\tindex{unsigned}\texttt{ int}, \texttt{unsigned long long}など)は，負の数を表現できない代わりに2倍程度の範囲の正の数を表現可能である．本資料ではほぼ使わないが，必要に応じて各自把握のこと．
+C++11では\texttt{\#include<cstdint>}すると，\eindex{int32\_t},
+\eindex{int64\_t}などの型を使用可能である．将来はこちらを使用するべきだが，本資料では，\texttt{int}と
+\texttt{long long}を用いる．
+
+
+\section{浮動小数と誤差}\label{section:floating-point-numbers}
+
+実数を扱う場合には，通常は浮動小数点数を用いる．
+
+なお状況によっては，整数を，小数を表すために用いることが適切である．たとえば，小数点以下$2$桁の
+み扱う場合は(円に対する銭など)，数値を$100$倍すれば整数になる．その場合には，
+内部では整数として演算を行い，表示する場合のみ，\texttt{cout << x/100
+  << "." << (x\%100) << endl;}などと小数表記にする方法がある．(固定小数点)
+
+より大きな数や小さな数を柔軟に表現するためには，\cemph{符号部} (sign)，\cemph{指数部} (exponent)，
+\cemph{仮数部} (mantissa) を持つ実数表現(浮動小数点表現)が利用される．
+
+\subsection{様々な誤差}
+浮動小数点数を使う場合には，誤差が含まれることを理解する必要がある．
+
+誤差は必ずしも直感的ではない．
+例として，0.1刻みで0から1まで処理するループを考える．
+この場合に適切な方法は，ループカウンタに整数を用いることである．一見等価なようでも0.1づつ足す方法は予想と異なる結果をもたらしうる．
+
+\begin{center}
+\begin{tabular}{ll}\hline
+  \begin{minipage}{.4\linewidth}
+良い実装
+\begin{pybox}
+i = 0
+while i < 10:
+  print(i/10.0)
+  i += 1
+\end{pybox}    
+  \end{minipage}
+  &
+  \begin{minipage}{.5\linewidth}
+\begin{alltt}
+0.0
+0.1
+(中略)
+0.8
+0.9  \# 全10行    
+\end{alltt}
+  \end{minipage}
+  \\\hline
+  \begin{minipage}{.4\linewidth}
+悪い実装
+(0.1から...11行表示)
+\begin{pybox}
+i = 0.0
+while i < 1.0:
+  print(i)
+  i += 0.1
+\end{pybox}
+  \end{minipage}
+  &
+  \begin{minipage}{.5\linewidth}
+\begin{alltt}
+0.0
+0.1
+(中略)
+0.7999999999999999
+0.8999999999999999
+0.9999999999999999     # 全11行
+\end{alltt}
+  \end{minipage}
+\\\hline\end{tabular}
+\end{center}
+
+このような現象は，次に説明する丸め誤差から生ずる．
+さらに，誤差を含む数同士の演算では誤差は拡大しうる．誤差の種類について，次の4種類の分類がある．
+
+\begin{description}
+\item[丸め誤差 (round-off errors)] 小数を2進数で表現する場合，有限桁では近似的にしか表
+  せないことに起因する誤差 (10進の小数で$1/3$を有限桁では正確に表現できないことに相当)\\
+  例 $0.1_{(10)} = 2^{-4} + 2^{-5}+2^{-8}+2^{-9}\ldots =
+  1.10011\ldots_{(2)}\cdot 2^{-4}$\\
+  練習: 次のプログラムの出力を予想しよう?
+  \begin{cbox}
+#include <iostream>
+using namespace std;
+int main() {
+  double a = 0.1;
+  double b = 0.3;
+  if (a*3 == b) cout << "OK" << endl;
+  else cout << "NG" << endl;
+}    
+  \end{cbox}
+  \begin{terminal}
+0.1*3 = 0011111111010011001100110011001100110011001100110011001100110100
+  0.3 = 0011111111010011001100110011001100110011001100110011001100110011    
+  \end{terminal}
+\item[桁落ち (loss of significance)] \cemph{有限の有効桁数で表現されている数について}，ほぼ同じような数値の差を取ると有効桁数が減少すること\\
+  例: $0.124 - 0.123 = 0.001$\\
+注:元々誤差なく表現されている数同士の演算では発生しない．
+\item[情報落ち (information loss)] 大きさの異なる数値の加減算では、小さな数値は大きな数値の有効範囲外になり無視されてしまうこと\\
+  例: $0.124 + 0.0000000123 = 0.124$
+\item[打ち切り誤差 (truncation errors)] 関数の値を無限級数を用いて数値計算をする場合，有限の項数で打ち切って近似することにより生ずる誤差
+\end{description}
+
+\subsection{double型の理解}
+IEEE 754 倍精度double (64bit) では，符号部$s$，指数部$e$，仮数部$m$ の3つの整数の組で，次のような一つの数を表す:
+\begin{equation}
+(-1)^s (1+m \cdot 2^{-52})) \cdot 2^{(e-1023)}.\label{eq:ieee64}
+\end{equation}
+全体を64bitで表現し，符号部$s$には第0ビット，指数部$e$ 第1--11ビット ($11$bits)，仮数部$m$ 12--63ビット ($52$bits)を割り当てる．
+
+次のプログラムは共用体(\texttt{union})の機能を利用して，\texttt{double}型の内部表現を表示する．なお\texttt{bitset}は，ここでは整数の二進表現を得るためだけに借用している．
+
+\begin{cbox}
+#include <iostream>
+#include <bitset>
+using namespace std;
+union double_long_long {
+  double floating_value;
+  unsigned long long integer_value;
+};
+void show_double(double v) {
+  double_long_long u;
+  u.floating_value = v;
+  cout << v << " = " << bitset<64>(u.integer_value) << endl;
+  long long sign = u.integer_value >> 63;
+  long long exponent = (u.integer_value >> 52)& ((1<<11)-1);
+  long long mantissa = u.integer_value & ((1ul<<52)-1);
+  cout << " sign = " << sign << endl;
+  cout << " exponent = " << exponent << ' ' << bitset<11>(exponent) << endl;
+  cout << " mantissa = " << bitset<52>(mantissa) << endl;
+  cout << " => " << (sign ? "-" : "+")
+       << " (1+" << (double)mantissa/(1ul<<52)
+       << ") * " << "2^(" << (exponent-1023) << ")" << endl;
+}
+int main() {
+  show_double(1.0);
+  show_double(-1.0);
+  show_double(0.5);
+  show_double(0.25);
+  show_double(0.75);
+}  
+\end{cbox}
+
+実行例: 式\ref{eq:ieee64}と照らして確認せよ．
+\begin{terminal}
+1 = 0011111111110000000000000000000000000000000000000000(略)
+ sign = 0
+ exponent = 1023 01111111111
+ mantissa = 000000000000000000000000000000000000000000(略)
+ => + (1+0) * 2^(0)
+-1 = 101111111111000000000000000000000000000000000000000(略)
+ sign = 1
+ exponent = 1023 01111111111
+ mantissa = 000000000000000000000000000000000000000000(略)
+ => - (1+0) * 2^(0)
+0.5 = 00111111111000000000000000000000000000000000000000(略)
+ sign = 0
+ exponent = 1022 01111111110
+ mantissa = 000000000000000000000000000000000000000000(略)
+ => + (1+0) * 2^(-1)
+0.25 = 0011111111010000000000000000000000000000000000000(略)
+ sign = 0
+ exponent = 1021 01111111101
+ mantissa = 000000000000000000000000000000000000000000(略)
+ => + (1+0) * 2^(-2)
+0.75 = 0011111111101000000000000000000000000000000000000(略)
+ sign = 0
+ exponent = 1022 01111111110
+ mantissa = 100000000000000000000000000(略)
+ => + (1+0.5) * 2^(-1)  
+\end{terminal}
+
+練習: 0.875 ($1/2+1/4+1/8$)を\texttt{double}で表現した際のビット列を予想せよ．上記のプログラムを用いて確認せよ．
+
+\section{構造体 struct}\label{section:struct}
+
+データをまとめて管理する目的で，\tindex{struct}を使用する．以下のような文法で，整数の変数\texttt{height}と\texttt{weight}を持つ，\texttt{Student}という新しい型を定義する:
+\begin{cbox}[emph=Student]
+struct Student { 
+  int height, weight;
+};
+\end{cbox}
+
+使用例:
+\begin{cbox}[emph=Student]
+  Student a;
+  a.height = 150;
+  a.weight = 50;
+  cout << a.height << ' ' << a.weight << endl;
+
+  Student b = { 170, 70 };
+  cout << b.height << ' ' << b.weight << endl;
+
+  Student c = { 180 }; // weight == 0
+  Student d = { };  // height, weight == 0
+\end{cbox}
+\begin{itemize}
+\item 各Student型の変数(上記では\texttt{a, b, c, d})の\texttt{height}や\texttt{weight}にアクセスするには，\texttt{.}(ドット)演算子を用いる．
+\item 初期化は，波括弧\texttt{\{\}}で行うことも出来る．
+\end{itemize}
+ 
+
+\chapter{Ruby}\label{chapter:ruby}
+\section{入出力}
+主に\ref{chapter:io}章に関連したサンプルコードを紹介する．
+\subsection{ICPC Score Totalizer Software}
+\begin{rbox}
+while true
+  judges = gets.to_i # 数字を入力
+  break if judges == 0
+  a = [] 
+  for i in 0..judges-1
+    a << gets.to_i
+  end # ここまでに配列aに各審判のスコアが入っている
+  sum = 0
+  for i in 0..judges-1
+    sum = sum + a[i]
+  end
+  puts sum
+  puts a.max
+end
+\end{rbox}
+
+\subsection{列の操作}
+
+\begin{rbox}[emph={Array}]
+  n = 50
+  # 長さnの配列を用意し各要素を0で初期化 (a[0]からa[n-1]まで有効)
+  a = Array.new(n,0)
+\end{rbox}
+
+
+\begin{rbox}[emph={each}]
+a = Array.new(5)
+a.each{|e| puts e}
+\end{rbox}
+
+\begin{rbox}
+a = [3,5,1,2,4]
+a.sort!
+a.reverse! # aを逆順に並び替え
+p a
+\end{rbox}
+
+\begin{rbox}
+a = [0,1,2,3,4,5,6]
+a[0,7] = a[3,4]+a[0,3]
+p a # \dingright{} [3, 4, 5, 6, 0, 1, 2]
+\end{rbox}
+
+\subsection{Hanafuda Shuffle}
+\begin{rbox}
+while line = gets
+  n, r = line.split(" ").map{|i| i.to_i} # n,r読み込み
+  break if n == 0
+  # n枚の山を作る
+  # 作った山を表示してみよう
+  r.times {
+    p, c = gets.split(" ").map{|i| i.to_i}
+    # シャッフルp,cを行う
+    # シャッフル毎に山全体を表示してみよう
+  }
+  # 山の先頭を出力
+end
+\end{rbox}
+
+\section{整列と貪欲法}
+主に\ref{chapter:greedy}章に関連したサンプルコードを紹介する．
+
+\subsection{整列}
+\begin{rbox}
+a = [3,5,1,2,4]
+a.sort!
+p a
+\end{rbox}
+
+\subsection{Finding Minimum String}
+
+\begin{rbox}
+N = gets.to_i
+A = []
+(1..N).each {
+  A << gets.chomp 
+}
+... // 整数の時と同様にAを整列(sort)する
+puts A[0]
+\end{rbox}
+
+\subsection{ペアと整列}
+
+\begin{rbox}
+a = [3,5]
+p a # [3,5]と表示
+b = [0.5,"X"]
+p b # [0.5,"X"]と表示
+\end{rbox}
+
+\subsection{Princess's Marriage}
+\begin{rbox}
+while line = gets
+  pN, pM = line.split(" ").map{|s| s.to_i}
+  break if pN == 0
+  pd = [] # <p,d>をしまう配列
+  (1..pN).each { # pN回何かする
+    d, p = gets.split(" ").map{|s| s.to_i}
+    pd << [p, d] 
+  }
+  # pdを大きい順に並べてみよう
+  # pdを出力してみよう
+  # 並べ替えがうまく行っていたら答えを計算してみよう
+end  
+\end{rbox}
+
+\section{動的計画法}
+主に\ref{chapter:dp}章に関連したサンプルコードを紹介する．
+
+\subsection{Fibonacci数列のナイーブな求め方}
+\begin{rbox}
+def fib(n) # 遅いバージョン
+  # p ["fib",n] 関数呼び出しの際に引数を表示
+  if n==0
+    0
+  elsif n == 1
+    1
+  else
+    fib(n-2)+fib(n-1)
+  end
+end  
+\end{rbox}
+
+\subsection{平安京ウォーキング}
+
+入力例
+\begin{rbox}
+dataset = gets.to_i
+dataset.times {
+  gx, gy = gets.split(" ").map(&:to_i)
+  p [gx,gy]
+  matatabi = gets.to_i
+  # 問題文では変数pを使っているが，表示コマンドのpと名前を分けた
+  (0..matatabi-1).each{|i|
+    x1,y1, x2,y2 = gets.split(" ").map(&:to_i)
+    p [x1,y1, x2,y2]
+  }
+}  
+\end{rbox}
+
+\section{基本データ構造}
+主に\ref{chapter:datastructure}章に関連したサンプルコードを紹介する．
+
+\subsection{文字列と読み込み}
+\begin{rbox}
+word = gets.chomp # getsで一行読み込んで，chompで行末の改行文字を取り去る
+puts word+word # 2つつなげたものを表示する
+\end{rbox}
+
+\subsection{スタック}
+
+Rubyでは\texttt{unshift, shift}をそれぞれ\texttt{push, pop}として用いる
+ことにする．
+\begin{rbox}[emph={unshift,shift}]
+stack = [] # (配列をStackとして扱う)
+stack.unshift(3) # 要素を先頭に追加
+stack.unshift(4)
+stack.unshift(1)
+while stack.size > 0 # 要素がある間
+  n = stack.shift # 先頭から取り出す
+  p n
+end  
+\end{rbox}
+
+
+Rubyでは配列をキューとして扱うと便利である．
+\begin{rbox}[emph={shift}]
+Q = [] # (配列をQueueとして扱う)
+Q << 3 # 要素を末尾に追加
+Q << 4
+Q << 1
+while Q.size > 0 # 要素がある間
+  n = Q.shift # 先頭から取り出す
+  p n
+end
+# 3, 4, 1  の順に表示される
+\end{rbox}
+
+\subsection{優先度付きキュー}
+
+Rubyの場合は，今のところオンラインジャッジで使えるライブラリがなさそうなので，自分で二分ヒープなどを実装する必要がある．
+\begin{rbox}[emph={PriorityQueue,push,pop,size}]
+class PriorityQueue
+  def initialize
+    # 配列で二分木を実現する i番目の要素の左の子供は2i+1, 右の子供は2i+2
+    # 親の要素は，子供のどちらより優先度が高いとする
+    @array = [] 
+    @size = 0
+  end
+  def push(a)
+    # 最後に仮置きした後，優先度が先祖より高ければ引き上げる
+    @array[@size] = a
+    heapify_up(@size)
+    @size += 1
+  end
+  def pop()
+    # 根の要素(優先度最大)を取り出した後，最後の要素を根に仮置きし，調整
+    raise unless @size > 0
+    ans = @array[0]
+    @size -= 1
+    @array[0] = @array[@size]
+    heapify_down(0)
+    ans
+  end
+  def size
+    @size
+  end
+  def swap(p,q) 
+    @array[p],  @array[q] = @array[q], @array[p]
+  end
+  def equal_or_better(p,q)
+    (@array[p] <=> @array[q]) <= 0
+  end
+  def heapify_up(n)
+    while n > 0
+      parent = (n-1)/2
+      break if equal_or_better(parent, n)
+      swap(parent,n)
+      n = parent
+    end
+  end
+  def heapify_down(n)
+    while true
+      l, r = n*2+1, n*2+2
+      break if @size <= l
+      child = l
+      child = r if r < @size && equal_or_better(r, l)
+      break if equal_or_better(n, child)
+      swap(child, n)
+      n = child
+    end
+  end
+end
+
+Q = PriorityQueue.new
+Q.push([50, 1]);
+Q.push([20, 2]);
+Q.push([30, 3]);
+Q.push([10, 4]);
+Q.push([80, 5]);
+
+while Q.size() > 0
+  cur = Q.pop(); # 最小の要素を取り出す
+  p cur
+end
+\end{rbox}
+
+\subsection{文字列と分割・連結・反転}
+
+\begin{rbox}
+word = "hello"
+s = word.split("")
+(0..s.length).each {|l|
+  a = s.first(l)
+  b = s.last(s.length-l)
+  # p a
+  # p b
+  puts a.join("")+" "+b.join("")
+}  
+\end{rbox}
+
+\begin{rbox}
+a = "hello"
+b = a.reverse
+puts b
+\end{rbox}
+
+\subsection{集合}
+
+rubyの場合は\texttt{Hash}を用いると同様の機能を得られる．\footnote{集合も用意され
+ており\texttt{require 'set'}とすると使えるので，興味のあるものは調べると良い．}
+挿入には\texttt{a.insert(element)}の代わりに\texttt{a[element]=1}を，指定した要素の数・有無には\texttt{a.count(element)}の代わりに\texttt{a[element]}を，集合の要素数は\texttt{a.size()}の代わりに\texttt{a.length}をそれぞれ用いる．
+
+\begin{rbox}
+all = Hash.new(0)
+puts all.length # 0
+all["hello"] = 1
+all["world"] = 1
+all["good morning"] = 1
+all["world"] = 1
+puts all["world"] # 1
+puts all["hello!!!"] # 0
+puts all.length # 3
+\end{rbox}
+
+\subsection{連想配列}
+
+\begin{rbox}[emph={Hash}
+table = Hash.new(0) # keyが存在しない時(*)のvalueを0に指定した
+table["taro"] = 180
+table["hanako"] = 160
+puts table["taro"] # 180
+puts table["ichirou"] # 0 (*)
+\end{rbox}
+
+\begin{rbox}
+table["ichirou"] += 1
+puts table["ichirou"] # 1
+table["ichirou"] += 1
+puts table["ichirou"] # 2  
+\end{rbox}
+
+
+\begin{rbox}
+phone = Hash.new
+phone["taro"] = 123;
+phone["jiro"] = 456;
+phone["saburo"] = 789;
+
+phone.each{|key,value|
+  p [key, value]
+}
+# ["taro", 123]
+# ["jiro", 456]
+# ["saburo", 789]
+\end{rbox}
+
+
+Rubyの場合は，C++より簡潔な記法が可能である．ループ中に使いたい変数を\texttt{|key,value|}の部分で指定する．
+
+\section{グラフ上の探索}
+主に\ref{section:graphsearch}章に関連したサンプルコードを紹介する．
+
+隣接リスト(例題Graph)の読み込み
+\begin{rbox}
+N = gets.to_i
+G = (1..N).map{ Array.new(N, 0) }
+N.times{
+  u,k,*v = gets.split(' ').map(&:to_i) # u,kは数, vは配列
+  v.each {|vi| # vの各要素viについて
+    # (u-1)と(vi-1)をつなげる
+  }
+}
+G.each{|r|
+  puts r.join(' ')
+}
+\end{rbox}
+
+幅優先探索(BFS) (\ref{section:bfs}章)
+\begin{rbox}
+Q = [0] # 始点0をいれたキュー(配列)
+D = Array.new(N,-1)
+D[0] = 0 # 始点への距離は0, 他の距離は-1としておく
+while Q.size > 0
+  p ["debug", Q] # 各ステップでのQの動作を確認 (後で消すこと)
+  cur = Q.shift
+  (0..N-1).each {|dst|
+    if ... then # curからdstに移動可能で、dstが未訪問だったら \label{code:dfsruby:visit}
+      D[dst] = D[cur]+1
+      Q << dst # Qにdstを詰める
+    end
+  }
+end
+# Dを表示  
+\end{rbox}
+
+深さ優先探索 (DFS) (\ref{section:dfs}章)
+\begin{rbox}[emph={dfs}]
+def dfs(src)
+  D[src] = $time # 訪問時刻を記録
+  $time += 1
+  (0..N-1).each {|dst|
+    if ... then # srcからdstに移動可能で、dstが未訪問だったら
+      dfs(dst)
+    end
+  }
+  F[src] = $time # 訪問終了時刻を記録
+  $time += 1
+  # 関数の終わりで\textcolor{iblue}{\textbf{親に戻る(青矢印)}}
+end
+
+
+D = Array.new(N) # D[i]の初期値はnil
+F = Array.new(N)
+$time = 1
+
+(0..N-1).each {|id| # 番号が若い節点から
+  if ! D[id] then # D[id]が未訪問だったら
+    dfs(id) # dfsを始める
+  end
+}
+# 出力  
+\end{rbox}
+
+\section{最短路}
+主に\ref{chapter:shortestpath}章に関連したサンプルコードを紹介する．
+
+BellmanFord法(\ref{section:BellmanFord}節):
+\begin{rbox}
+V,E,r = gets.split(' ').map(&:to_i) # 入力
+Edge = []
+E.times{
+  s,t,d = gets.split(' ').map(&:to_i)
+  Edge << [s, t, d]
+}
+Inf = 10000*100000+100 # 全頂点をたどると最大
+C = Array.new(V,Inf) # 各頂点までの始点からの距離の上限
+C[r] = 0 # 始点
+V.times{ # V回
+  count = 0
+  Edge.each{|s,t,d| # 全ての辺(sからt, コストd)に対して
+    if C[s] < Inf && C[t] > C[s]+d
+      C[t] = ... # C[t]を更新
+      count += 1
+    end
+  }
+  break if count == 0 # 更新されなければ終了して良い
+}
+
+V.times{|i|
+  puts (C[i] == Inf) ? "INF" : C[i]
+}
+\end{rbox}
+
+\section{数値積分}
+主に\ref{chapter:integral}章に関連したサンプルコードを紹介する．
+
+\subsection{Find the Outlier}
+\begin{rbox}[emph={interpolate}]
+# 配列\$Vに値が入っているとする
+def interpolate(n, e)
+  sum = 0.0
+  $V.each_index{|k|
+    next if ... # kがnかEなら
+    p = $V[k]
+    $V.each_index{|i|
+      p *= 1.0*(...-i)/(k-i) if ... # iがkでもnでもEでもなければ
+    }
+    sum += p
+  }
+  sum
+end
+\end{rbox}
+
+\begin{rbox}[emph={},emph={[2]outlier,interpolate}]
+require 'scanf'
+# 関数定義
+while true
+  d = (scanf '\%d')[0]
+  break if d == 0
+  \$V = scanf('\%f'*(d+3))
+  (0..d+2).each {|i|
+    if outlier(i) # iを無視すれば全て整合する
+      puts i
+      break
+    end
+  }
+end
+\end{rbox}
+
+\subsection{Intersection of Two Prisms}
+
+\begin{rbox}[emph={width},emph={[2]w}]
+def width(polygon, x) # polygon にx-yまたはx-z平面の座標が順に入っている
+  w = []
+  polygon.each_index{|i|
+    p, q = polygon[i], polygon[(i+1)
+    # 辺pq を考える
+    if p[0] == x
+      w << p[1]
+    elsif (p[0] < x && x < q[0]) || (p[0] > x && x > q[0])
+      x0, y0 = p[0], p[1]
+      x1, y1 = q[0], q[1]
+      x0, y0, x1, y1 = x1, y1, x0, y0 if p[0] > x
+      w << y0 + 1.0*(y1-y0)*(x-x0)/(x1-x0)
+    end
+  }
+  raise if w.length == 0
+  w.max - w.min
+end
+\end{rbox}
+
+\begin{rbox}[emph={volume},emph={[2]width,total}]
+def volume
+  $X.sort!
+  $X.uniq!
+  sum = 0.0
+  xmin = [($P1.min)[0], ($P2.min)[0]].max
+  xmax = [($P1.max)[0], ($P2.max)[0]].min
+  (0..$X.length-2).each{ |i|
+    a, b = $X[i], $X[i+1]
+    next unless xmin <= a && a <= xmax && xmin <= b && b <= xmax
+    m = (a+b)/2.0
+    va = width($P1, a)*width($P2, a)
+    vb = width($P1, b)*width($P2, b)
+    vm = width($P1, m)*width($P2, m)
+    area =  .. // (a,va), (m,vm), (b,vb)を通る2次式の区間[a,b]の定積分
+    sum += area
+  }
+  sum
+end
+\end{rbox}

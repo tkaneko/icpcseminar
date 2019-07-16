@@ -1,0 +1,426 @@
+\chapter{はじめに}\label{chapter:introduction}
+
+\section{資料の構成}
+
+各章が90--105分の演習時間を想定して作られている\footnote{当初はそうであったが，整理の都合で現在では分量が適切でない章もあるかもしれない．}．
+「例題」やヒントがついた易しい「練習問題」は，主に未経験者を想定して用意されていて，一旦理解した後であれば5-10分で解けるものが多い．しかし，初めて取り組む場合は時間を5倍程度長めに見積もることをお勧めする．
+経験者向けには，
+難易度の異なる複数の練習問題が紹介されている．所要時間は熟達度で異なるが，問題名に印$\star{}$が一つつくと，難易度が5倍程度(たとえば回答作成に要する時間で測ったとして)
+難化する目安である．また後ろの章の知識を前提としている場合もある．そのため，各章の問題を全て解いてから次に進むのでは
+なく，印なしの易しい問題を解いたら一旦次の章に進むことを勧める．一旦
+ひと通り例題を解いてどのような話題があるか目を通すと，二週目には解ける問題が増えていることだろう．さらに印$\star{}$を二つ以上持つ問題は，その章の内容と多少は関係があっても解法と直接の関係がない場合もある．これは，どの戦略が有効かの見極めも，問題解決を学ぶ面白さの一つであるため．
+
+\paragraph{凡例}
+資料内へのリンクは深緑で示される(例: \ref{chapter:introduction}章，文献\cite{book:pcc})．
+また，外部へのリンクは青で示される(例: \url{http://www.graco.c.u-tokyo.ac.jp/icpc-challenge/})．
+
+\paragraph{教養学部前期課程実践的プログラミング履修(予定)者への補足} これから開講されるセミナーが，
+この資料の予習を前提とすることは*ない*． すなわち，未経験者向けの題材が，経験者向けの練習問題と並んで引き続き提供される．扱うテーマはこの資料と重なる部分もあれば重ならない部分もある．
+
+\section{プログラミング言語}
+
+以下の言語での学習を想定する:
+\begin{itemize}
+\item \cemph{C++} (推奨: メインの想定言語である)
+\item Java 
+\item \cemph{Python3} (推奨: ただし一部の問題は実行時間制限で解けない可能性がある)
+\item Ruby (一部の問題は実行時間制限で解けない可能性がある)
+\end{itemize}
+
+以下の言語での学習は，推奨しない:
+\begin{itemize}
+\item C (理由: 標準ライブラリが少ないため．たとえば連想配列機能)\\
+  C言語使用者はC++を使うこと．この資料の演習に必要な機能はC++全体のほんの一部であるので，そこだけ借りて使いながら，他はC言語のつもりで書けば良い．つまり，一般にC++を学び直すことよりも苦労は少ないはずである．
+\item Python2 (理由: 変数のスコープや文字コードなど様々な落とし穴がある)
+\end{itemize}
+
+\section{教科書・参考書}
+
+この資料の読者としては，繰り返しや条件分岐を短いコードならは思い通りにかける状態であること，再帰についても習ったことがあることが想定されている．
+そのため本当に初めてプログラミングに触れる場合は，いったん他著で学ぶことを勧める．既に購入済みの書籍があればそれで十分だが，新たに購入する場合は「オンラインジャッジではじめるC/C++プログラミング入門」\cite{book:aojcpp}が，AOJを使っている点で本資料との接続が良い．
+
+本文中で，
+\pcaojbook として「プログラミングコンテスト攻略のためのアルゴリズムとデータ構造」に，
+\pccbook{}として「プログラミングコンテストチャレンジ
+ブック第二版」に言及することがある(言うまでもなくこの分野の名著である)．
+また，学習時間(と予算)にゆとりがある者には，「アルゴリズムデザイン」\cite{book:algorithmdesign}の6章までを時間をかけて読み進めることを勧める．ページ数が多いが，その分丁寧に書かれているので，類書の中では初学者に適すると思われる(ただし筆者は英語版で読んだので，日本語版の評価は予想である)．さらに深く学ぶ場合は，「アルゴリズムイントロダクション」\cite{book:algorithmintroduction}も，時間をかけて学習する価値がある．
+
+\section{オンラインジャッジシステム}
+
+本資料の問題は，以下のオンラインジャッジから採録している．資料作成時に担
+当者が各オンラインジャッジの利用条件を探した範囲では，この資料内での各
+問題への参照は問題ないと判断したが，お気づきの際は随時連絡されたい．
+
+\begin{itemize}
+\item Aizu Online Judge (\eindex{AOJ}) \url{http://judge.u-aizu.ac.jp}
+\item Peking University Judge Online for ACM/ICPC (\eindex{POJ}) \url{http://poj.org}
+\item Codeforces \url{http://www.codeforces.com/}
+\item szkopul \url{https://szkopul.edu.pl} (旧\url{http://main.edu.pl/en})
+\end{itemize}
+
+出典の記述の際に日本国内の\eindex{ACM-ICPC}(\url{https://icpc.iisf.or.jp/})及びACM-ICPC OB/OG会(JAG; \url{http://acm-icpc.aitea.net/})のものは，区別がつく範囲で簡略に示した．たとえば\jindex{国内予選}{こくないよせん}は日本のACM-ICPCのものを，模擬国内予選はACM-ICPC OB/OG会主催の恒例の練習会を指す．
+
+\section{Aizu Online Judge (AOJ)}
+
+\subsection*{アカウント作成}
+
+初めての場合はまず\eindex{AOJ}のアカウントを作成する．各システムとも無料で使うことができる．
+なお，各オンラインジャッジは，運営者の好意で公開されているものであるから，\emph{迷惑をかけない}ように使うこと．特に\cemph{パスワードを忘れない}こと．
+
+\paragraph{AOJのアカウント作成 (初回のみ)}
+ページ右上の Register/Setting からアカウントを作成する．
+User IDとPasswordを覚えておくこと(ブラウザに覚えさせる，もしくは暗号化
+ファイルにメモする)．この通信はhttpsでないので，注意．
+Affiliation は the University of Tokyo等とする． E-mailやURLは記入不要．
+
+ここで，自分が提出したプログラムを公開するかどうかを選ぶことができる．公開して(``public''を選択)いれば，プログラムの誤りを誰かから助けてもらう際に都合が良いかもしれない．一方，「他者のコード片の動作を試してみる」というようなことを行う場合は，著作権上の問題が発生しうるので，非公開の方が良いだろう(``private''を選択)．
+
+\paragraph{AOJへの提出 (毎回)}
+
+ログイン後に問題文を表示した状態で，長方形に上向き矢印のアイコンを押す
+と，フォームが表れる．
+
+\includegraphics{aoj.eps}
+
+
+自分の提出に対応する行(``Author''を見よ)の``Statusが ``\eindex{Accepted}''なら正答．
+
+
+\paragraph{正答でなかった時}
+
+様々な原因がありうるので，まずジャッジの応答がどれにあてはまるか，システムの使い方を誤解していないかなどを説明を読んで確認する．
+Terms of use
+(\url{https://onlinejudge.u-aizu.ac.jp/#/term_of_use}),
+Judge's replies (\url{https://onlinejudge.u-aizu.ac.jp/#/judges_replies}),
+チュートリアル (\url{http://judge.u-aizu.ac.jp/onlinejudge/AOJ_tutorial.pdf})
+などの資料がある．
+
+一般的に\textbf{プログラムが意図したとおりに動かないことは，誰でも(熟達者でも!)しばしばある}ことである．
+組み上げたプログラムが動かなかったとしても，何から何までダメという事はなく，多くの場合はほんの少しの変更で解決することが多い．そこで，どの部分までは正しく動いているか，各部品ごとに動作確認をする方針が有効である．
+コンピュータでのプログラミングは \textbf{copyやundoができる}ことが長所であるから，(料理で食材を無駄にしてがっかりするようなことは起こらない)，臆せず色々試すと良い．
+
+困った状況から復帰するノウハウも多少も存在する(付録 \ref{chapter:debug})
+ので，徐々に身につけると有用であろう．
+一方で，経験が少ない段階では，\cemph{15分以上悩まない}ことをお勧めする．
+手掛かりなく悩んで時間を過ごすことは苦痛であるばかりでなく，初期の段階では学習効果もあまりないので，
+指導者や先輩，友達に頼る，あるいは一旦保留して他の問題に取り組んで経験を積む方が良いだろう．
+相談する場合は，「こう動くはずなのに(根拠はこう)，実際にはこう動く」と問題を具体化して言葉にしてゆくと解決が早い．
+なお，悩んで意味がある時間は，熟達に応じて2時間，2日間等伸びるだろう．
+
+\section{入出力と問題の対応}
+
+さっそく，AOJで1題回答してみよう．
+
+\begin{psbox}{Rectangle}{AOJ}
+たて a cm よこ b cm の長方形の面積と周の長さを求めるプログラムを作成し
+て下さい。
+  \aojid{ITP1_1_C}
+\end{psbox}
+
+以下の手順で取り組む:
+\begin{enumerate}
+\item 問題を把握する
+\item 計算手順を検討する (今回は$a*b$と$a+b$を計算すれば良いことを把握する)
+\item プログラムを書く．\jindex{エディタ}{えでぃた}(Emacs, mi などお好みで)で編集し，ファイルに保存する．
+\item 手元のコンピュータで動作確認をする (必須)
+\item AOJに提出して確認する
+\end{enumerate}
+
+\paragraph{解答例}: 以下に各言語の回答例と，\texttt{a=3}, \texttt{b=5}のケースに対する動作確認の方法を示す．
+
+\begin{pybox}
+a,b = map(int, input().split())
+area = a*b
+perimeter = 2*(a+b)
+print("
+\end{pybox}
+
+\text{input()}で一行読み，
+\texttt{split()}で空白区切りで分割し\footnote{この時，末尾の改行文字や(もしあれば)行頭や連続する空白文字も削除される．}，\texttt{map(int, ...)}で分割
+された各要素を整数に変換している。
+
+上記の内容を\texttt{rectangle.py}などと保存したあと，\jindex{ターミナル}{たーみなる}上で実
+行する．\texttt{\$}はプロンプトの略記であり，自身で入力する必要はない(つまり\texttt{python3}以降をタイプする)\footnote{詳しくはHWB15.2を参照 \url{https://hwb.ecc.u-tokyo.ac.jp/wp/information-2/cui/terminal/}}．また，\texttt{\#}とその右部分は補足説明であり，これも入力の必要はない．各行の入力終了時に，エンターキーを押すこと．以下，斜体はキーボードからの入力を示す．
+\begin{terminal}
+$ python3 rectangle.py
+|3 5| # キーボードから入力する
+15 16 # プログラムの出力の表示
+\end{terminal}
+
+\begin{cbox}
+#include <iostream>
+using namespace std;
+int main() {
+  int a,b;
+  cin >> a >> b;
+  // ここで area, perimeterを計算
+  cout << area << ' ' << perimeter << "\textbackslash{}n";
+}
+\end{cbox}
+
+上記のプログラムを，\texttt{rectangle.cc}などに保存する．続いてコンパイルして実行する．
+
+「ターミナル」(MacOSXの場合)の動作例は以下の通り:
+\begin{terminal}[emph={Wall,fsanitize}]
+$ g++ -std=c++11 -Wall -fsanitize=undefined rectangle.cc　# コンパイル
+$ ./a.out　# 実行
+|3 5| # キーボードから入力する
+15 16 # プログラムの出力の表示
+\end{terminal}
+
+\texttt{\#}とそれより右は，コメントであり，入力する必要はない．
+\eindex{-std=c++11}は，C++11規格を有効にする\jindex{コンパイルオプション}{こんぱいるおぷしょん}である．
+\eindex{-Wall}は様々な警告を有効にするオプションで，何か警告時にメッセージが出た場合
+は解消することが望ましい．特に\cemph{プログラムの動作に疑問がある場合}は，\cemph{目立つ警告を解消してから質問}すること．
+読み方が分からないメッセージが出た場合は，誰かと相談する．
+\eindex{-fsanitize=undefined}は，実行時エラーを捕捉する機構を有効化する．動作確認の間はつけておくことが望ましい．詳しくは\ref{section:cpp-sanitize}章を参照．
+
+\begin{warningbox}{C言語禁止}
+  本資料を読み進める場合は，C言語では不十分で，C++の機能の一部を使う必要がある．必要な部分を少しづつ紹介するので，この時点で\texttt{iostream,cin,cout}などに慣れること．
+\end{warningbox}
+
+\begin{warningbox}{ブラウザ上のプログラミング禁止}
+ 簡単な問題はブラウザ上でコーディングすることもできるかもしれないが，今後扱う複雑な問題はそうではない．手元のPCでコンパイルして，様々なデータで実行できる環境を，この時点で用意しておくこと．
+\end{warningbox}
+
+\begin{cbox}
+#include <cstdio>
+int main() {
+  int a,b;
+  scanf("
+  // ここで area, perimeterを計算
+  printf("
+}
+\end{cbox}
+この資料では，C言語使用者はC++に移行するよう推奨するが，C++を用い
+る場合でも入出力はCの\texttt{scanf}, \texttt{printf}を用いて良い．
+
+\begin{rbox}
+a,b = gets.split(" ").map(&:to_i)
+area = a*b
+perimeter = 2*(a+b)
+print sprintf("
+\end{rbox}
+
+上記の内容を\texttt{rectangle.rb}などと保存したあと，ターミナル上で実
+行する
+\begin{terminal}
+$ ruby rectangle.rb
+|3 5| # キーボードから入力する
+15 16 # プログラムの出力
+\end{terminal}
+
+Javaの場合，オンラインジャッジシステムの制限で，常に\texttt{Main}というクラスに回答を書く必要がある．そのためには\texttt{Main.java}というファイル名で保存する必要があるので，問題毎にフォルダを作成し，そこで作業すること．
+\begin{javabox}[emph={Main}]
+import java.util.Scanner;
+public class Main {
+    public static void main(String[] args) {
+	Scanner scanner = new Scanner(System.in);
+	int a = scanner.nextInt(), b = scanner.nextInt();
+	int area = a*b;
+	int perimeter = 2*(a+b);
+	System.out.println(area+" "+perimeter);
+    }
+}
+\end{javabox}
+
+\begin{terminal}
+$ javac Main.java
+$ java Main
+|3 5| # キーボードから入力する
+15 30 # プログラムの出力の表示
+\end{terminal}
+
+
+\section{実践上の注意事項}\label{section:commands}
+\subsection{フォルダの保存}
+各章では，サンプルや機能確認のために複数のコード片を扱う．
+そこで，混乱を避けるため，\jindex{フォルダ}{ふぉるだ}を作って，テーマごとに別の名前をつけて
+ファイルに保存すると良い．そして，それぞれを動作可能に保つ．
+一方，お勧めしない方法は，一度作ったファイルを継ぎ足しながら，一つの巨大なファ
+イルにすることである．そうしてしまうと，後から，2種類のコードを実行して差を
+比べるようなことが難しくなる．
+
+「ターミナル」(MacOSXの場合)の動作例は以下の通り:
+\begin{terminal}
+$ mkdir programming
+# (フォルダ作成，最初の一回のみ)
+$ mkdir programming/chapter1
+# (各章毎に行う)
+$ cd programming/chapter1
+# (カレントディレクトリを変更．\$HOME/programming/chapter1/ 以下にソースコードを保存)
+\end{terminal}
+
+\subsection{標準入出力とリダイレクションによるファイルを用いたテスト}
+
+この節では\cemph{データがあるだけ読み込む方法}と\cemph{ファイルを用いたテスト}の方法を紹介する．
+この節の内容は，今ただちに身につける必要はないが，第2,3章に取り組む過程で身につけておくことが望ましい．
+
+巨大な入出力を扱う場合は，キーボードから手で入力することは適切でない．
+(手で入力すると，タイプミスのリスクがある．コピーペーストすると多少改善するが，データ量に上限があるり，また範囲選択のミスの余地が依然として残る．プログラムの正しさを検証する際には，他の不確定要因は100\%取り除き，プログラムそのものに集中することが望ましい．)
+
+各問題では標準入出力を扱い，プログラムの正しさを入力に対する出力で判定
+する．入力では，入力データがある限り読み込んで処理する場合も多い．
+そこで，初めに例を挙げる．以下環境は基本的にMacOSXを想定するが，ubuntuやcygwin等でも動作すると思われる．
+
+\begin{itembox}[l]{例題}
+年を読み込んで，うるう年かどうかを判定し，日数を出力するプログラムを作る
+\end{itembox}
+
+(いい加減な)プログラム例 (C++): leap.cc
+
+\begin{cbox}
+// 4年に一度?
+#include <iostream>
+using namespace std;
+int main() {
+    int year;
+    while (cin >> year) { // cinはboolに自動変換されるので入力が読める限りループ
+      if (year 
+        cout << 366 << endl;
+      else
+        cout << 365 << endl;
+    }
+}
+\end{cbox}
+
+
+
+\paragraph{コンパイル}
+
+(前述の通り\$記号は，ターミナルへのコマンド入力を示す)
+
+C++の場合:
+\begin{terminal}
+$ g++ -Wall leap.cc
+\end{terminal}
+
+Javaの場合:
+\begin{terminal}
+$ javac Main.java
+\end{terminal}
+
+\paragraph{実行例}
+斜体はキーボードからの入力を示す．終了はCtrlキーを押しながら c
+または dをタイプする．この操作を\^{}Cや\^{}Dと表記する．
+
+\begin{terminal}
+$ ./a.out
+|2004|
+366
+|1999|
+365
+|1900|
+366
+|2000|
+366
+|^D|
+\end{terminal}
+
+\paragraph{ファイルを用いたテスト}
+実行するたびに毎回キーボードをタイプするのは煩雑であるから，自動化した
+い．
+そこで，リダイレクションとファイルを用いたテストを解説する．
+早い段階で身につけることが望ましい．
+
+正しい入出力例をエディタで作成し，\texttt{cat}コマンドで中身を確認する:
+\begin{terminal}
+$ cat years.input
+2004
+1999
+1900
+2000
+$ cat years.output
+366
+365
+365
+366
+\end{terminal}
+
+\jindex{リダイレクション}{りだいれくしょん}を使った実行(キーボード入力の代わりにファイルから読み込む):
+\begin{terminal}
+$ ./a.out < years.input
+366
+365
+366
+366
+\end{terminal}
+
+実行結果をファイルに保存(画面に表示する代わりにファイルに書き込む):
+\begin{terminal}
+$ ./a.out < years.input > test-output
+$ cat test-output
+366
+365
+366
+366
+\end{terminal}
+
+\eindex{diff}を用いた自動的な比較:
+\begin{terminal}
+$ diff -u test-output years.output
+--- years.output        Fri Oct 14 10:53:52 2005
++++ test-output Fri Oct 14 10:53:56 2005
+@@ -1,4 +1,4 @@
+ 366
+ 365
+-365
++366
+ 366
+\end{terminal}
+4行目あたりが違うことを教えてくれる
+
+
+\begin{itembox}[l]{資料:}
+\begin{itemize}
+\item HWB 15 コマンド\\
+  \url{http://hwb.ecc.u-tokyo.ac.jp/wp/information-2/cui/}
+\item HWB 14.4 コマンドを使ったファイル操作\\
+ \url{http://hwb.ecc.u-tokyo.ac.jp/wp/information-2/filesystem/cui-fs/}
+\end{itemize}
+\end{itembox}
+
+\subsection{ジャッジデータのダウンロードと手元での実行}\label{run-judge-data}
+プログラムを提出した際に，Acceptedではなく \eindex{Wrong Answer}や\eindex{Time Limit Exceeded},
+\eindex{Rutime Error}などとなる場合がある．
+
+仮に今\texttt{ITP1\_4\_D}という問題を解いていて，Wrong Answerになったとする．
+
+\includegraphics[width=.9\linewidth]{2.png}
+
+中央付近の18/20という数字は，テストケースの18番目まで正答し，19個目で失敗したという意味である．その部分がハイパーリンクになっているのでクリックすると，詳細が分かる．
+
+\includegraphics[width=.7\linewidth]{3.png}
+
+さらに \texttt{Case \#19:}の行をクリックすると，実際のデータを見ることができる(問題による)．
+
+\includegraphics[width=.9\linewidth]{4.png}
+
+このデータを手元で試してみよう．
+データは，コピーペーストするには大きすぎるので，まず\texttt{in19.txt}の部分をクリックしてダウン
+ロードする．
+環境やブラウザによるが\texttt{ITP1\_4\_D\_in19.txt}という名前でダウンロー
+ドフォルダなどに保存されたとする．適宜，リダイレクションによって実行
+する．
+
+\begin{terminal}
+$ ./a.out < ~/Downloads/ITP1_4_D_in19.txt 
+28 999997 724134219  
+\end{terminal}
+
+また，今回はプログラムの出力とJudge Outputとの間に差があることは一目でわかるが，一般に5019101515のような桁数の数字を目で比較す
+るのは困難であるから(1文字異なっていても気づかない)，同様にダウンロー
+ドして\texttt{diff}コマンドにより比較するのが良い．
+
+実行結果をファイルに保存(画面に表示する代わりにファイルに書き込む):
+\begin{terminal}
+$ ./a.out < sample-input.txt > my-output.txt
+$ cat my-output.txt
+1 17 37
+\end{terminal}
+
+2つのファイル比較:
+\begin{terminal}
+$ diff -u sample-output.txt my-output.txt
+\end{terminal}
+(差分がある場合のみ，出力がある)

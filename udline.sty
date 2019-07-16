@@ -1,0 +1,620 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{udline}[2005/01/28 下線マクロ ver2.52：ロードします]
+%\DeclareOption{}{}
+%\ExecuteOptions{}
+\ProcessOptions\relax
+%
+\@ifundefined{iftdir}{\newif\iftdir\tdirfalse}{}
+%
+%\tracingmacros=2\setcounter{errorcontextlines}{8}%←これはデバッグ用
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%% 各種設定マクロ %%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\ulcharC#1#2#3{%                   下線に使う記号の設定(文字の下)
+  \font\@tempfontC=#1%
+  \def\ulcharact@r{%
+    \hbox to #3{%
+      \hss\vtop to \z@{\vss\hbox{\@tempfontC#2}\vss}\hss
+    }%
+  }%
+}
+%--------------------------------------------------------------------
+\def\ulcharG#1#2#3{%                   下線に使う記号の設定(空白の下)
+  \font\@tempfontG=#1%
+  \def\ugcharact@r{%
+    \hbox to #3{%
+      \hss\vtop to \z@{\vss\hbox{\@tempfontG#2}\vss}\hss
+%      \setbox1=\hbox{\@tempfontG#2}%
+%      \@tempdimb=\ht1\advance\@tempdimb by -\dp1
+%      \hss\vtop to \z@{\vss\box1\vskip\@tempdimb\vss}\hss
+    }%
+  }%
+}
+%--------------------------------------------------------------------
+\def\ulchar#1#2#3{%                    下線に使う記号の設定(同時設定)
+  \ulcharC{#1}{#2}{#3}\ulcharG{#1}{#2}{#3}}
+%====================================================================
+\def\BLdot{{%                                ベースライン上のピリオド
+  \setbox\z@=\hbox{\font\@tempfont=cmr10\@tempfont .}%
+  \iftdir
+    \@tempdima=-0.26389\p@ \advance\@tempdima by \dp\z@
+  \else
+    \@tempdima=-0.52777\p@
+  \fi
+  \ht\z@=\z@ \dp\z@=\z@
+  \leavevmode\raise\@tempdima\box\z@
+  }}
+%--------------------------------------------------------------------
+\def\adjeq{{\font\@tempfont=cmr5\@tempfont% 縦書き・横書きで位置調整
+  \iftdir%                                              したイコール
+    \raisebox{2.5\p@}[2\p@][\z@]{=}%
+  \else
+    \raisebox{\z@}[2\p@][\z@]{=}%
+  \fi}}
+%============================= 線種設定 =============================
+\def\setniju{\ulchar{cmr5}{\adjeq}{2\p@}}%               二重線にする
+%--------------------------------------------------------------------
+\def\settensen{\ulchar{cmr10}{\BLdot}{2\p@}}%              点線にする
+%--------------------------------------------------------------------
+\def\setnoko{%                                             鋸線にする
+  \iftdir
+    \ulchar{cmr12}{\raisebox{-0.7ex}[0.3ex][\z@]{\char'136}}{2.6\p@}%
+  \else
+    \ulchar{cmr12}{\raisebox{-1.2ex}[0.3ex][\z@]{\char'136}}{2.6\p@}%
+  \fi}
+%--------------------------------------------------------------------
+\def\setnami{%                                             波線にする
+  \iftdir
+    \ulchar{cmr12}{\raisebox{-0.7ex}[0.3ex][\z@]{\char'176}}{2.6\p@}%
+  \else
+    \ulchar{cmr12}{\raisebox{-1.2ex}[0.3ex][\z@]{\char'176}}{2.6\p@}%
+  \fi}
+%--------------------------------------------------------------------
+\def\setNami{\ulchar{%                                   太波線にする
+  \iftdir tgoth10\else goth10\fi}{〜}{5.5\p@}}
+%----- 以降はくり返し単位が大きいので文字ポイントに合わせて定義 -----
+\def\setItten#1#2{%                                    一点鎖線にする
+  \@tempdima=#1\advance\@tempdima by #2\relax
+  \edef\@hasenunit{\the\@tempdima}
+  \ulcharC{cmr10}{\@tempdima=#1\relax
+    \vrule width0.5\@tempdima height 0.2\p@ depth 0.2\p@
+    \hb@xt@#2{\hss\BLdot\hss}%
+    \vrule width0.5\@tempdima height 0.2\p@ depth 0.2\p@
+    }{\@hasenunit}%
+  \ulcharG{cmr10}{\vphantom{\BLdot}%
+    \vrule width0.2em height 0.2\p@ depth 0.2\p@}{0.15em}%
+}
+\def\setitten{\@tempdima=1\@ptsize\p@
+  \@tempdimb=0.35\@tempdima
+  \@tempdima=0.7\@tempdima
+  \edef\@temparg{{\the\@tempdima}{\the\@tempdimb}}%
+  \expandafter\setItten\@temparg}
+%--------------------------------------------------------------------
+\def\setNiten#1#2{%                                    二点鎖線にする
+  \@tempdima=#1\advance\@tempdima by #2\relax
+  \edef\@hasenunit{\the\@tempdima}
+  \ulcharC{cmr10}{\@tempdima=#1\relax
+    \vrule width0.5\@tempdima height 0.2\p@ depth 0.2\p@
+    \hb@xt@#2{\hss\BLdot\kern-\p@\hss\BLdot\hss}%
+    \vrule width0.5\@tempdima height 0.2\p@ depth 0.2\p@
+    }{\@hasenunit}%
+  \ulcharG{cmr10}{\vphantom{\BLdot}%
+    \vrule width0.2em height 0.2\p@ depth 0.2\p@}{0.15em}%
+}
+\def\setniten{\@tempdima=1\@ptsize\p@
+  \@tempdimb=0.5\@tempdima
+  \@tempdima=0.55\@tempdima
+  \edef\@temparg{{\the\@tempdima}{\the\@tempdimb}}%
+  \expandafter\setNiten\@temparg}
+%--------------------------------------------------------------------
+\def\setHasen{\@ifnextchar[{\setH@sen}{\setH@sen[0.4\p@]}}%破線にする
+\def\setH@sen[#1]#2#3{%
+  \@tempdima=#2\advance\@tempdima by #3\relax
+  \edef\@hasenunit{\the\@tempdima}
+  \ulcharC{cmr10}{\@tempdima=#2\relax\@tempdimb=#1\relax
+    \@tempdima=0.5\@tempdima\advance\@tempdima by 0.05\p@
+    \@tempdimb=0.5\@tempdimb
+    \vrule width \@tempdima height \@tempdimb depth \@tempdimb
+    \hskip#3\relax
+    \vrule width \@tempdima height \@tempdimb depth \@tempdimb
+    }{\@hasenunit}%
+  \ulcharG{cmr10}{}{0.15em}%
+}
+\def\sethasen{\@tempdima=1\@ptsize\p@
+  \@tempdimb=0.25\@tempdima
+  \@tempdima=0.8\@tempdima
+  \edef\@temparg{{\the\@tempdima}{\the\@tempdimb}}%
+  \expandafter\setHasen\@temparg}
+%---------------------- デフォルト設定:二重線 -----------------------
+\setniju
+%====================================================================
+\def\setulwidth#1{\def\@ulht{#1}}%     下線の太さ(正確には高さ)の設定
+\setulwidth{0.1ex}%                             その初期設定( 0.1ex )
+%--------------------------------------------------------------------
+\def\setulminsep#1#2{%                   下線とベースラインの最小距離
+  \def\@ulminsep{\iftdir#1\else#2\fi}}
+\setulminsep{1.2ex}{0.6ex}% その初期設定(縦書時：1.2ex 横書時 0.6ex)
+%--------------------------------------------------------------------
+\def\setulsep#1{\def\@ulsep{#1}}%                    上記距離への増減
+\setulsep{2\p@}%                                 その初期設定( 2 pt )
+%--------------------------------------------------------------------
+\def\setolwidth#1{\def\@olht{#1}}%     上線の太さ(正確には高さ)の設定
+\setolwidth{0.1ex}%                             その初期設定( 0.1ex )
+%--------------------------------------------------------------------
+\def\setolminsep#1#2{%                   上線とベースラインの最小距離
+  \def\@olminsep{\iftdir#1\else#2\fi}}
+\setolminsep{1.2ex}{1.8ex}% その初期設定(縦書時：1.2ex 横書時 1.8ex)
+%--------------------------------------------------------------------
+\def\setolsep#1{\def\@olsep{#1}}%                    上記距離への増減
+\setolsep{2\p@}%                                 その初期設定( 2 pt )
+%--------------------------------------------------------------------
+\def\setslwidth#1{%                打消し線の太さ(正確には高さ)の設定
+  \@tempdima=#1\relax\@tempdima=0.5\@tempdima
+  \edef\@halfslht{\the\@tempdima}}
+\setslwidth{0.1ex}%                             その初期設定( 0.1ex )
+%--------------------------------------------------------------------
+\def\set@slvpos#1#2{%                        打消し線を引く高さの設定
+  \ifx\@empty#1\@empty\setbox0=\hbox{#2}\else\setbox0=\hbox{#1}\fi
+  \@tempdima=0.5\ht0\advance\@tempdima by -0.5\dp0
+  \edef\@slvpos{\the\@tempdima}%
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%% 改行不可タイプ %%%%%%%%%%%%%%%%%%%%%%%%%%
+%=============================== 下線 ===============================
+\def\unl#1{\leavevmode%                                    下線を生成
+  \setbox0=\hbox{#1}\@tempdima=\wd0
+  \hb@xt@\@tempdima{\advance\@tempdima by 0.05em\hss
+    \iftdir
+      \vbox{\hsize=\@tempdima%
+        \vskip\@ulsep\hrule height\@ulht\vskip\@ulsep
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ height \@ulminsep\hss}%
+      }%
+    \else
+      \vtop{\hsize=\@tempdima%
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ depth \@ulminsep\hss}%
+        \nointerlineskip\vskip\@ulsep\hrule height\@ulht\vskip\@ulsep
+      }%
+    \fi
+  \hss}%
+}
+%=============================== 上線 ===============================
+\def\ovl#1{\leavevmode%                                    上線を生成
+  \setbox0=\hbox{#1}\@tempdima=\wd0
+  \hb@xt@\@tempdima{\advance\@tempdima by 0.05em\hss
+    \iftdir
+      \vtop{\hsize=\@tempdima%
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ depth \@olminsep\hss}%
+        \nointerlineskip\vskip\@olsep\hrule height\@olht\vskip\@olsep
+      }%
+    \else
+      \vbox{\hsize=\@tempdima%
+        \vskip\@olsep\hrule height\@olht\vskip\@olsep
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ height \@olminsep\hss}%
+      }%
+    \fi
+  \hss}%
+}
+%============================= 打消し線 =============================
+\def\sol{\@ifnextchar[{\@sol}{\@sol[]}}%               打消し線を生成
+\def\@sol[#1]#2{\set@slvpos{#1}{#2}\@@sol{#2}}
+\def\@@sol#1{\leavevmode
+  \setbox0=\hbox{#1}\@tempdima=\wd0
+  \hb@xt@\@tempdima{\advance\@tempdima by 0.05em
+  	\hss\raise\@slvpos\hb@xt@\z@{\hss
+  	  \vrule width \@tempdima height\@halfslht depth\@halfslht\hss}%
+	\hb@xt@\z@{\hss\unhbox0\hss}%
+  \hss}%
+}
+%============================= 飾り下線 =============================
+\def\unc#1{\leavevmode%                                飾り下線を生成
+  \setbox0=\hbox{#1}%
+  \@tempcnta=\wd0
+  \setbox1=\ulcharact@r
+  \@tempdima=\wd1
+  \divide\@tempcnta by \@tempdima
+  \advance\@tempcnta by 1
+  \multiply\@tempdima by \@tempcnta
+  \hb@xt@\@tempdima{%
+    \iftdir
+      \vbox{\hsize=\@tempdima
+        \vskip\@ulsep
+        \hb@xt@\@tempdima{\leaders\box1\hfill}\vskip\@ulsep
+        \nointerlineskip
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ height\@ulminsep\hss}%
+        }%
+    \else
+      \vtop{\hsize=\@tempdima
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ depth \@ulminsep\hss}%
+        \nointerlineskip\vskip\@ulsep
+        \hb@xt@\@tempdima{\leaders\box1\hfill}\vskip\@ulsep
+        }%
+    \fi
+  }%
+}
+%============================= 飾り上線 =============================
+\def\ovc#1{\leavevmode%                                飾り下線を生成
+  \setbox0=\hbox{#1}%
+  \@tempcnta=\wd0
+  \setbox1=\ulcharact@r
+  \@tempdima=\wd1
+  \divide\@tempcnta by \@tempdima
+  \advance\@tempcnta by 1
+  \multiply\@tempdima by \@tempcnta
+  \hb@xt@\@tempdima{%
+    \iftdir
+      \vtop{\hsize=\@tempdima
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ depth \@olminsep\hss}%
+        \nointerlineskip\vskip\@olsep
+        \hb@xt@\@tempdima{\leaders\box1\hfill}\vskip\@olsep
+        }%
+    \else
+      \vbox{\hsize=\@tempdima
+        \vskip\@olsep
+        \hb@xt@\@tempdima{\leaders\box1\hfill}\vskip\@olsep
+        \nointerlineskip
+        \hb@xt@\@tempdima{%
+          \hss\unhbox0\vrule width\z@ height\@olminsep\hss}%
+        }%
+    \fi
+  }%
+}
+%=========================== 飾り打消し線 ===========================
+\def\soc{\@ifnextchar[{\@soc}{\@soc[]}}%         飾り打ち消し線を生成
+\def\@soc[#1]#2{\set@slvpos{#1}{#2}\@@soc{#2}}
+\def\@@soc#1{\leavevmode
+  \setbox0=\hbox{#1}%
+  \@tempcnta=\wd0
+  \setbox1=\ulcharact@r
+  \@tempdima=\wd1
+  \divide\@tempcnta by \@tempdima
+  \advance\@tempcnta by 1
+  \multiply\@tempdima by \@tempcnta
+  \@tempdimb=\@slvpos
+  \hb@xt@\@tempdima{%
+  	\hss\raise\@tempdimb\hb@xt@\z@{%
+  	  \hss\hb@xt@\@tempdima{\leaders\box1\hfill}\hss}%
+	\hb@xt@\z@{\hss\unhbox0\hss}%
+  \hss}%
+}
+%%%%%%%%%%%%%%%%%%%%%%%%% 途中改行可能タイプ %%%%%%%%%%%%%%%%%%%%%%%%
+\def\@endul{\relax}%     この辺の定義はダミー。間違えて外部で使っても
+\def\eiji{\@endul}%   \relaxに展開されればさして問題ないのと，\ifx で
+\def\Eiji{\eiji}%同等とみなされないように定義の階層を変えているだけ。
+\def\@hogo#1{\@makeun{\mbox{#1}}\@dolist}
+\def\@eiji#1 {\@makeun{#1}\futurelet\@t@gi\@checkEiji}
+\def\@checkEiji{%
+  \ifx\@t@gi\Eiji\let\@tugi=\@dolist\else\@ulgl\let\@tugi=\@eiji\fi\@tugi}
+%====================================================================
+\def\ul#1{\leavevmode\@dolist#1\@endul}%                   下線を生成
+% 以下ほとんど処理は同じなので，いくつかの内部マクロを切り替えて実現
+%--------------------------------------------------------------------
+\def\ol#1{%                                                上線を生成
+  \leavevmode\@changeol\@dolist#1\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\Sl{\@ifnextchar[{\@Sl}{\@Sl[]}}%                  打消し線を生成
+\def\@Sl[#1]#2{\set@slvpos{#1}{#2}%
+  \leavevmode\@changesl\@dolist#2\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\uc#1{%                                            飾り下線を生成
+  \leavevmode\@changevarul\@dolist#1\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\oc#1{%                                            飾り上線を生成
+  \leavevmode\@changevarol\@dolist#1\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\Sc{\@ifnextchar[{\@Sc}{\@Sc[]}}%              飾り打消し線を生成
+\def\@Sc[#1]#2{\set@slvpos{#1}{#2}%
+  \leavevmode\@changevarsl\@dolist#2\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\Eul#1{%                                       下線を生成(英文用)
+  \leavevmode\@dolist\eiji#1 \Eiji\@endul}
+%--------------------------------------------------------------------
+\def\Eol#1{%                                       上線を生成(英文用)
+  \leavevmode\@changeol\@dolist\eiji#1 \Eiji\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\ESl{\@ifnextchar[{\@ESl}{\@ESl[]}}%       打消し線を生成(英文用)
+\def\@ESl[#1]#2{\set@slvpos{#1}{#2}%
+  \leavevmode\@changesl\@dolist\eiji#2 \Eiji\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\Euc#1{%                                   飾り下線を生成(英文用)
+  \leavevmode\@changevarul\@dolist\eiji#1 \Eiji\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\Eoc#1{%                                   飾り下線を生成(英文用)
+  \leavevmode\@changevarol\@dolist\eiji#1 \Eiji\@endul\@changeul}
+%--------------------------------------------------------------------
+\def\ESc#1{\@ifnextchar[{\@ESc}{\@ESc[]}}%     飾り下線を生成(英文用)
+\def\@ESc[#1]#2{\set@slvpos{#1}{#2}%
+  \leavevmode\@changevarsl\@dolist\eiji#2 \Eiji\@endul\@changeul}
+%====================================================================
+\def\@changeul{\let\@makeun=\@naturalmakeun\let\@ulgl=\@naturalulgl}
+\def\@changeol{\let\@makeun=\@makeov\let\@ulgl=\@olgl}
+\def\@changesl{\let\@makeun=\@makeso\let\@ulgl=\@slgl}
+\def\@changevarul{\let\@makeun=\@varmakeun\let\@ulgl=\@varulgl}
+\def\@changevarol{\let\@makeun=\@varmakeov\let\@ulgl=\@varolgl}
+\def\@changevarsl{\let\@makeun=\@varmakeso\let\@ulgl=\@varslgl}
+%====================================================================
+\def\@dolist{\futurelet\@tugi\@chkbg}
+\def\@chkbg{%
+  \if\bgroup\@tugi
+    \let\@tugi\@@dolistmbox
+  \else
+    \let\@tugi\@@dolist\fi
+  \@tugi}
+\def\@@dolistmbox{\@@dolist\mbox}
+\def\@@dolist{\afterassignment\@d@list\let\@tugi= }% 1文字ずつ取り出す
+\def\@d@list{%                                             ための処理
+  \ifx\@tugi\@endul
+    \let\@tugi\relax
+  \else\ifx\@tugi\mbox
+      \let\@tugi\@hogo
+    \else\ifx\@tugi\eiji
+        \let\@tugi\@eiji
+      \else
+        \@udline\let\@tugi\@dolist
+      \fi
+    \fi
+  \fi
+  \@tugi}
+%====================================================================
+\def\@udline{%                                     空白および禁則処理
+  \if\space\@tugi
+    \@ulgl
+  \else
+    \if !\@tugi\relax\penalty10000\fi
+    \if "\@tugi\relax\penalty10000\fi
+    \if '\@tugi\relax\penalty10000\fi
+    \if )\@tugi\relax\penalty10000\fi
+    \if *\@tugi\relax\penalty500\fi
+    \if +\@tugi\relax\penalty500\fi
+    \if -\@tugi\relax\penalty10000\fi
+    \if .\@tugi\relax\penalty10000\fi
+    \if ,\@tugi\relax\penalty10000\fi
+    \if /\@tugi\relax\penalty500\fi
+    \if ;\@tugi\relax\penalty10000\fi
+    \if ?\@tugi\relax\penalty10000\fi
+    \if :\@tugi\relax\penalty10000\fi
+    \if ]\@tugi\relax\penalty10000\fi
+    \if 、\@tugi\relax\penalty10000\fi
+    \if 。\@tugi\relax\penalty10000\fi
+    \if ，\@tugi\relax\penalty10000\fi
+    \if ．\@tugi\relax\penalty10000\fi
+    \if ・\@tugi\relax\penalty10000\fi
+    \if ：\@tugi\relax\penalty10000\fi
+    \if ；\@tugi\relax\penalty10000\fi
+    \if ？\@tugi\relax\penalty10000\fi
+    \if ！\@tugi\relax\penalty10000\fi
+    \if ）\@tugi\relax\penalty10000\fi
+    \if ｝\@tugi\relax\penalty10000\fi
+    \if ］\@tugi\relax\penalty10000\fi
+    \if ’\@tugi\relax\penalty10000\fi
+    \if ー\@tugi\relax\penalty10000\fi
+    \if ＋\@tugi\relax\penalty200\fi
+    \if −\@tugi\relax\penalty200\fi
+    \if ＝\@tugi\relax\penalty200\fi
+    \if ぁ\@tugi\relax\penalty150\fi
+    \if ぃ\@tugi\relax\penalty150\fi
+    \if ぅ\@tugi\relax\penalty150\fi
+    \if ぇ\@tugi\relax\penalty150\fi
+    \if ぉ\@tugi\relax\penalty150\fi
+    \if っ\@tugi\relax\penalty150\fi
+    \if ゃ\@tugi\relax\penalty150\fi
+    \if ゅ\@tugi\relax\penalty150\fi
+    \if ょ\@tugi\relax\penalty150\fi
+    \if ァ\@tugi\relax\penalty150\fi
+    \if ィ\@tugi\relax\penalty150\fi
+    \if ゥ\@tugi\relax\penalty150\fi
+    \if ェ\@tugi\relax\penalty150\fi
+    \if ォ\@tugi\relax\penalty150\fi
+    \if ッ\@tugi\relax\penalty150\fi
+    \if ャ\@tugi\relax\penalty150\fi
+    \if ュ\@tugi\relax\penalty150\fi
+    \if ョ\@tugi\relax\penalty150\fi
+    \@makeun{\vrule width\z@\@tugi\vrule width\z@}%
+    \ifx \#\@tugi\relax\penalty500\fi
+    \ifx \$\@tugi\relax\penalty500\fi
+    \ifx \%\@tugi\relax\penalty500\fi
+    \ifx \&\@tugi\relax\penalty500\fi
+    \ifx \`\@tugi\relax\penalty10000\fi
+    \if (\@tugi\relax\penalty10000\fi
+    \if [\@tugi\relax\penalty10000\fi
+    \if （\@tugi\relax\penalty10000\fi
+    \if ｛\@tugi\relax\penalty10000\fi
+    \if ［\@tugi\relax\penalty10000\fi
+    \if ‘\@tugi\relax\penalty10000\fi
+    \if ＃\@tugi\relax\penalty200\fi
+    \if ＄\@tugi\relax\penalty200\fi
+    \if ％\@tugi\relax\penalty200\fi
+    \if ＆\@tugi\relax\penalty200\fi
+  \fi}
+%====================================================================
+\def\@makeun#1{%                           文字に下線を引く処理の中心
+  \hskip \z@ plus.5\p@ minus\z@\unl{#1}}%    すでに定義した\unlを利用
+%--------------------------------------------------------------------
+\let\@naturalmakeun=\@makeun
+%--------------------------------------------------------------------
+\def\@makeov#1{%                           文字に上線を引く処理の中心
+  \hskip \z@ plus.5\p@ minus\z@\ovl{#1}}%    すでに定義した\ovlを利用
+%--------------------------------------------------------------------
+\def\@makeso#1{%                       文字に打消し線を引く処理の中心
+  \hskip \z@ plus.5\p@ minus\z@\@@sol{#1}}%すでに定義した\@@solを利用
+%--------------------------------------------------------------------
+\def\@varmakeun#1{%                    文字に飾り下線を引く処理の中心
+  \hskip \z@ plus.5\p@ minus\z@\unc{#1}}%    すでに定義した\uncを利用
+%--------------------------------------------------------------------
+\def\@varmakeov#1{%                    文字に飾り上線を引く処理の中心
+  \hskip \z@ plus.5\p@ minus\z@\ovc{#1}}%    すでに定義した\ovcを利用
+%--------------------------------------------------------------------
+\def\@varmakeso#1{%                文字に飾り打消し線を引く処理の中心
+  \hskip \z@ plus.5\p@ minus\z@\@@soc{#1}}%すでに定義した\@@socを利用
+%====================================================================
+\def\@ulgl{%                               空白に下線を引く処理の中心
+  \iftdir
+    \@tempdima=\@ulminsep
+    \advance\@tempdima by \@ulsep\relax
+    \@tempdimb=-\@tempdima
+    \advance\@tempdima by \@ulht
+    \leaders\hrule height\@tempdima depth\@tempdimb
+      \hskip .34em plus .17em minus .11em
+  \else
+    \@tempdima=-\@ulminsep
+    \advance\@tempdima by -\@ulsep\relax
+    \@tempdimb=-\@tempdima
+    \advance\@tempdimb by \@ulht
+    \leaders\hrule height\@tempdima depth\@tempdimb
+      \hskip .34em plus .17em minus .11em
+  \fi
+}
+%--------------------------------------------------------------------
+\let\@naturalulgl=\@ulgl
+%--------------------------------------------------------------------
+\def\@olgl{%                               空白に上線を引く処理の中心
+  \iftdir
+    \@tempdima=-\@olminsep
+    \advance\@tempdima by -\@olsep\relax
+    \@tempdimb=-\@tempdima
+    \advance\@tempdimb by \@olht
+    \leaders\hrule height\@tempdima depth\@tempdimb
+      \hskip .34em plus .17em minus .11em
+  \else
+    \@tempdima=\@olminsep
+    \advance\@tempdima by \@olsep\relax
+    \@tempdimb=-\@tempdima
+    \advance\@tempdima by \@olht
+    \leaders\hrule height\@tempdima depth\@tempdimb
+      \hskip .34em plus .17em minus .11em
+  \fi
+}
+%--------------------------------------------------------------------
+\def\@slgl{%                           空白に打消し線を引く処理の中心
+  \@tempdima=\@slvpos\advance\@tempdima by \@halfslht\relax
+  \@tempdimb=-\@slvpos\advance\@tempdimb by \@halfslht\relax
+  \leaders\hrule height\@tempdima depth\@tempdimb
+    \hskip .34em plus .17em minus .11em
+}
+%--------------------------------------------------------------------
+\def\@varulgl{%                        空白に飾り下線を引く処理の中心
+  \setbox0=\ugcharact@r
+  \setbox1=\hb@xt@\wd0{%
+    \iftdir
+      \vbox{%
+        \hsize=\wd0\vskip\@ulsep\box0\vskip\@ulsep\vskip\@ulminsep}%
+    \else
+      \vtop{%
+        \hsize=\wd0\vskip\@ulminsep\vskip\@ulsep\box0\vskip\@ulsep}%
+    \fi
+  }%
+  \@tempdima=.34em
+  \@tempcnta=\@tempdima
+  \@tempdima=\wd1
+  \divide\@tempcnta by \@tempdima
+  \advance\@tempcnta by 1
+  \multiply\@tempdima by \@tempcnta
+  \divide\@tempcnta by 2\relax
+  \@tempdimb=\@tempcnta\wd1
+  \xleaders\box1
+    \hskip \@tempdima plus \@tempdimb minus \@tempdimb\relax
+}
+%--------------------------------------------------------------------
+\def\@varolgl{%                        空白に飾り上線を引く処理の中心
+  \setbox0=\ugcharact@r
+  \setbox1=\hb@xt@\wd0{%
+    \iftdir
+      \vtop{%
+        \hsize=\wd0\vskip\@olminsep\vskip\@olsep\box0\vskip\@olsep}%
+    \else
+      \vbox{%
+        \hsize=\wd0\vskip\@olsep\box0\vskip\@olsep\vskip\@olminsep}%
+    \fi
+  }%
+  \@tempdima=.34em
+  \@tempcnta=\@tempdima
+  \@tempdima=\wd1
+  \divide\@tempcnta by \@tempdima
+  \advance\@tempcnta by 1
+  \multiply\@tempdima by \@tempcnta
+  \divide\@tempcnta by 2\relax
+  \@tempdimb=\@tempcnta\wd1
+  \xleaders\box1
+    \hskip \@tempdima plus \@tempdimb minus \@tempdimb\relax
+}
+%--------------------------------------------------------------------
+\def\@varslgl{%                    空白に飾り打消し線を引く処理の中心
+  \setbox1=\ugcharact@r
+  \@tempdimb=\@slvpos
+  \setbox0=\hbox{\raise\@tempdimb\box1}%
+  \@tempdima=.34em
+  \@tempcnta=\@tempdima
+  \@tempdima=\wd0
+  \divide\@tempcnta by \@tempdima
+  \advance\@tempcnta by 1
+  \multiply\@tempdima by \@tempcnta
+  \divide\@tempcnta by 2\relax
+  \@tempdimb=\@tempcnta\wd0
+  \xleaders\box0
+    \hskip \@tempdima plus \@tempdimb minus \@tempdimb\relax
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 短縮名登録 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\unnoko#1{{\setnoko\unc{#1}}}
+\def\ovnoko#1{{\setnoko\ovc{#1}}}
+\def\unoko#1{{\setnoko\uc{#1}}}
+\def\onoko#1{{\setnoko\oc{#1}}}
+\def\Eunoko#1{{\setnoko\Euc{#1}}}
+\def\Eonoko#1{{\setnoko\Eoc{#1}}}
+%--------------------------------------------------------------------
+\def\unnami#1{{\setnami\unc{#1}}}
+\def\ovnami#1{{\setnami\ovc{#1}}}
+\def\unami#1{{\setnami\uc{#1}}}
+\def\onami#1{{\setnami\oc{#1}}}
+\def\Eunami#1{{\setnami\Euc{#1}}}
+\def\Eonami#1{{\setnami\Eoc{#1}}}
+%--------------------------------------------------------------------
+\def\unNami#1{{\setNami\unc{#1}}}
+\def\ovNami#1{{\setNami\ovc{#1}}}
+\def\uNami#1{{\setNami\uc{#1}}}
+\def\oNami#1{{\setNami\oc{#1}}}
+\def\EuNami#1{{\setNami\Euc{#1}}}
+\def\EoNami#1{{\setNami\Eoc{#1}}}
+%--------------------------------------------------------------------
+\def\unitten#1{{\setitten\unc{#1}}}
+\def\ovitten#1{{\setitten\ovc{#1}}}
+\def\uitten#1{{\setitten\uc{#1}}}
+\def\oitten#1{{\setitten\oc{#1}}}
+\def\Euitten#1{{\setitten\Euc{#1}}}
+\def\Eoitten#1{{\setitten\Eoc{#1}}}
+%--------------------------------------------------------------------
+\def\unniten#1{{\setniten\unc{#1}}}
+\def\ovniten#1{{\setniten\ovc{#1}}}
+\def\uniten#1{{\setniten\uc{#1}}}
+\def\oniten#1{{\setniten\oc{#1}}}
+\def\Euniten#1{{\setniten\Euc{#1}}}
+\def\Eoniten#1{{\setniten\Eoc{#1}}}
+%--------------------------------------------------------------------
+\def\unniju#1{{\setniju\unc{#1}}}
+\def\ovniju#1{{\setniju\ovc{#1}}}
+\def\uniju#1{{\setniju\uc{#1}}}
+\def\oniju#1{{\setniju\oc{#1}}}
+\def\Euniju#1{{\setniju\Euc{#1}}}
+\def\Eoniju#1{{\setniju\Eoc{#1}}}
+%--------------------------------------------------------------------
+\def\unhasen#1{{\sethasen\unc{#1}}}
+\def\ovhasen#1{{\sethasen\ovc{#1}}}
+\def\uhasen#1{{\sethasen\uc{#1}}}
+\def\ohasen#1{{\sethasen\oc{#1}}}
+\def\Euhasen#1{{\sethasen\Euc{#1}}}
+\def\Eohasen#1{{\sethasen\Eoc{#1}}}
+%--------------------------------------------------------------------
+\def\untensen#1{{\settensen\unc{#1}}}
+\def\ovtensen#1{{\settensen\ovc{#1}}}
+\def\utensen#1{{\settensen\uc{#1}}}
+\def\otensen#1{{\settensen\oc{#1}}}
+\def\Eutensen#1{{\settensen\Euc{#1}}}
+\def\Eotensen#1{{\settensen\Eoc{#1}}}
+%
+%====================================================================
+\endinput
+%% 
+%% End of file `udline.sty'

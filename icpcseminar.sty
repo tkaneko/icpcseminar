@@ -1,0 +1,186 @@
+%%% -*- coding: utf-8 -*-
+\usepackage{listings,jlisting}
+\usepackage{arydshln}
+\usepackage{times}
+\input{jpncolor}
+\usepackage{icpccommon}
+\cornersize{0.01}
+\usepackage{longtable}
+\usepackage{makeidx}
+\usepackage{udline}
+\usepackage{pxpgfmark}
+
+\newcommand{\cemphl}[1]{\cemphp{\ul{#1}}}
+
+\usetikzlibrary{shadows}
+
+
+\def\arrow{
+  (10.75:1.1) -- (6.5:1) arc (6.25:120:1) [rounded corners=0.5] --
+  (120:0.9) [rounded corners=1] -- (130:1.1) [rounded corners=0.5] --
+  (120:1.3) [sharp corners] -- (120:1.2) arc (120:5.25:1.2)
+  [rounded corners=1] -- (10.75:1.1) -- (6.5:1) -- cycle
+}
+
+\definecolor{mygrey}{gray}{0.85}
+\definecolor{dgrey}{gray}{0.35}
+\newcommand{\graytext}[1]{\colorbox{mygrey}{#1}}
+\newcommand{\cplusplus}[1]{\graytext{#1}}
+
+%%% index
+\newcommand{\jindex}[2]{\cemph{#1}\index{#2@#1}}
+\newcommand{\eindex}[1]{\emph{#1}\index{#1}}
+\newcommand{\tindex}[1]{\texttt{#1}\index{#1}}
+
+%%% framebox
+\newtheorem{tips}{Tips}
+\cornersize{0.05}
+
+\setlength{\TPHorizModule}{20mm}
+
+\newdimen\errorsize \errorsize=0.2pt
+\newcommand\LabFrame[5]{%
+    \fboxrule=5\FrameRule
+    \fboxsep=-2\errorsize
+    \textcolor{#1}{%
+    \fbox{%
+      \vbox{\nobreak
+      \advance\FrameSep\errorsize
+      \begingroup
+        \advance\baselineskip\FrameSep
+        \hrule width .18 \linewidth height \baselineskip
+        \nobreak
+        \vskip-\baselineskip
+      \endgroup
+      \vskip 0.5\FrameSep
+      \hbox to .18\linewidth{\strut \hfill\textcolor{white}{\textbf{#2}}\hfill}%\hskip\FrameSep
+      \vskip-\baselineskip
+      \hbox to .9\linewidth
+{\hskip .18\linewidth \hskip1.5\FrameSep\textcolor{TitleColor}{\textbf{#3}\quad\hfill\small(#4)}}%\hskip\FrameSep
+%      \hbox{\hskip\FrameSep \strut
+%        \textcolor{TitleColor}{\textbf{#2#3#4}}}%
+      \vskip .7\FrameSep
+      \hrule height \fboxrule
+      \nobreak \nointerlineskip
+      \vskip 1.3\FrameSep
+      \begingroup
+      \hbox {\hskip\FrameSep%
+        \normalcolor #5%
+        \hskip\FrameSep%
+      }%
+      \endgroup
+      \vskip\FrameSep
+    }}%
+}}
+%\newcommand\LabFrame[5]{%
+%    \fboxrule=\FrameRule
+%    \fboxsep=-\errorsize
+%    \textcolor{#1}{%
+%    \fbox{%
+%      \vbox{\nobreak
+%      \advance\FrameSep\errorsize
+%      \begingroup
+%        \advance\baselineskip\FrameSep
+%        \hrule height \baselineskip
+%        \nobreak
+%        \vskip-\baselineskip
+%      \endgroup
+%      \vskip 0.5\FrameSep
+%      \hbox {\hskip\FrameSep \strut
+%        \textcolor{TitleColor}{\textbf{#2\hfill #3\hfill#4}}\hskip\FrameSep}%
+%      \nobreak \nointerlineskip
+%      \vskip 1.3\FrameSep
+%      \hbox {\hskip\FrameSep
+%        \normalcolor #5%
+%        \hskip\FrameSep}%
+%      \vskip\FrameSep
+%    }}%
+%}}
+\definecolor{TitleColor}{rgb}{.0,.0,.0}
+
+%\definecolor{pboxcolor}{rgb}{0.5,0.5,0.9}
+\colorlet{pboxcolor}{icyan}
+%\definecolor{psboxcolor}{rgb}{0.9,0.6,0.6}
+\colorlet{psboxcolor}{igreen}
+
+\newenvironment{contlabelframe}[5][\Frame@Lab\ 続き]{%
+  % #1 optional continuation label,
+  % #2 class, #3 title, #4 cite, #5 color
+  \def\Frame@Lab{#2}%
+  \def\FrameCommand{\LabFrame{#5}{#2}{#3}{#4}}%
+  \def\FirstFrameCommand{\LabFrame{#5}{#2}{#3}{#4}}%
+  \def\MidFrameCommand{\LabFrame{#5}{}{}{#1}}%
+  \def\LastFrameCommand{\LabFrame{#5}{}{}{#1}}%
+  \MakeFramed{\advance\hsize-\width \FrameRestore}
+}{\endMakeFramed} 
+
+\newenvironment{pbox}[2]%
+{\begin{contlabelframe}{問題}{#1}{#2}{pboxcolor}}
+{\end{contlabelframe}}
+
+\newenvironment{psbox}[2]%
+{\begin{contlabelframe}{例題}{#1}{#2}{psboxcolor}}
+{\end{contlabelframe}}
+
+%%% cbox, c11box, rbox, terminal
+% todo: literate
+\lstset{framerule=1pt,rulecolor=\color{lightgray},basicstyle=\ttfamily,numbers=left,frame=lines,emphstyle={\color{ired}\textbf},emphstyle={[2]\color{iblue}\textbf},emphstyle={[3]\color{white}},xleftmargin=3em,xrightmargin=3em,texcl}
+
+\def\FrameCommand{\textcolor{lightgray}{\vrule width 1zw} \hspace*{-8pt}}
+\lstnewenvironment{terminal}[1][]
+{\MakeFramed {\advance\hsize-\width \FrameRestore}\lstset{language=sh,numbers=right,frame=lines,moredelim=[is][\itshape]{|}{|},morekeywords={git,ssh,gdb,./a.out,gcc,diff,mkdir,ls,end,elsif,def,python3},deletekeywords={type,set,test,in,for},basicstyle=\ttfamily,#1}\small}
+{\endMakeFramed}
+
+\newdimen\codelabelwidth \codelabelwidth=3em
+\newcommand{\codelabel}[2]{\colorbox{#1}{\hbox to \codelabelwidth{\hfill\textcolor{white}{#2}\hfill}}}
+\lstnewenvironment{cbox}[1][]
+{\begin{flushleft}\codelabel{icyan}{C++}\end{flushleft}\vskip-1.5\baselineskip%
+\lstset{xleftmargin=2\codelabelwidth,rulecolor=\color{icyan},language=c++,morecomment=[s]{/*}{*/},morekeywords={main,assert,cin,cerr,cout,endl,scanf,printf,vector,map,set,size_t,abs,sin,cos,conj,real,imag,norm,valarray,slice,string,pair,first,second,make_pair,sort,reverse,sqrt,atan2,iterator,const_iterator},#1}\small}
+{}
+\lstnewenvironment{purecbox}[1][]
+{\begin{flushleft}\codelabel{igreen}{C}\end{flushleft}\vskip-1.5\baselineskip%
+\lstset{xleftmargin=2\codelabelwidth,rulecolor=\color{igreen},language=c,morecomment=[s]{/*}{*/},morekeywords={main,assert,scanf,printf,size_t,abs,sin,cos,sqrt,atan2},#1}\small}
+{}
+
+%
+\lstnewenvironment{c11box}[1][]
+{\begin{flushleft}\codelabel{iblue}{C++11}\end{flushleft}\vskip-1.5\baselineskip%
+\lstset{xleftmargin=2\codelabelwidth,rulecolor=\color{iblue},language=c++,morekeywords={main,array,assert,cin,cerr,cout,endl,scanf,printf,vector,map,set,size_t,abs,sin,cos,conj,real,imag,norm,valarray,slice,string,pair,first,second,make_pair,sort,reverse,sqrt,atan2,iterator,const_iterator,auto,tuple},#1}\small}
+{}
+\lstnewenvironment{c14box}[1][]
+{\begin{flushleft}\codelabel{iblue}{C++14}\end{flushleft}\vskip-1.5\baselineskip%
+\lstset{xleftmargin=2\codelabelwidth,rulecolor=\color{iblue},language=c++,morekeywords={main,array,assert,cin,cerr,cout,endl,scanf,printf,vector,map,set,size_t,abs,sin,cos,conj,real,imag,norm,valarray,slice,string,pair,first,second,make_pair,sort,reverse,sqrt,atan2,iterator,const_iterator},#1}\small}
+{}
+
+\lstnewenvironment{rbox}[1][]
+{\begin{flushleft}\codelabel{ired}{Ruby}\end{flushleft}\vskip-1.5\baselineskip%
+\lstset{xleftmargin=2\codelabelwidth,framerule=.5pt,rulecolor=\color{ired},language=ruby,morekeywords={new,each,map,puts,Array,sort,reverse,lambda,call,method,raise},#1}\small}
+{}
+
+\lstnewenvironment{pybox}[1][]
+{\begin{flushleft}\codelabel{iyellow}{Python3}\end{flushleft}\vskip-1.5\baselineskip%
+\lstset{xleftmargin=2\codelabelwidth,framerule=.5pt,rulecolor=\color{iyellow},language=python,morekeywords={assert,sort,True,False,reverse,__init__,with},#1}\small}
+{}
+
+\lstnewenvironment{javabox}[1][]
+{\begin{flushleft}\codelabel{dgrey}{Java}\end{flushleft}\vskip-1.5\baselineskip%
+\lstset{xleftmargin=2\codelabelwidth,framerule=.5pt,rulecolor=\color{dgrey},language=java,morekeywords={System,Main,Scanner,nextInt,println},#1}\small}
+{}
+
+% tipsbox
+\graphicspath{/home/kaneko/lib/conf/sty/img}
+%
+\newenvironment{tipsbox}[1]%
+{\begin{minipage}{.95\linewidth}\begin{center}\begin{itembox}[l]{\raisebox{-1ex}{\includegraphics[width=4ex]{img/box/bulb_on.pdf}} #1}}
+{\end{itembox}\end{center}\end{minipage}}
+%
+\newenvironment{debugbox}[1]%
+{\begin{minipage}{.95\linewidth}\begin{center}\begin{itembox}[l]{\includegraphics[width=1em]{img/box/bad-bug.pdf} #1}}
+{\end{itembox}\end{center}\end{minipage}}
+
+\newenvironment{warningbox}[1]%
+{\begin{minipage}{.95\linewidth}\begin{center}\begin{itembox}[l]{\raisebox{-1.5ex}{\includegraphics[height=6ex]{img/box/1391088123.pdf}} #1}}
+{\end{itembox}\end{center}\end{minipage}}
+
+
+

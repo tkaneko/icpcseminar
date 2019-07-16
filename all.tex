@@ -1,0 +1,175 @@
+\documentclass[dvipdfmx,report]{jsbook}
+\newcommand{\lastedit}{\tt
+Time-stamp: <2019-07-17 00:13:14 kaneko>
+}
+\setlength{\voffset}{-0.5in}
+\setlength{\textwidth}{\fullwidth}
+\setlength{\evensidemargin}{\oddsidemargin}
+\setlength{\textheight}{39\baselineskip}
+\addtolength{\textheight}{\topskip}
+\setlength{\voffset}{-0.5in}
+\setlength{\headsep}{0.3in}
+
+\usepackage{fancyhdr}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage[dvipdfmx]{xcolor}
+\usepackage[toc,page]{appendix}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{atbegshi}
+\usepackage{wrapfig}
+\usepackage{comment}
+\usepackage{colortbl}
+
+\excludecomment{versionalpha}
+\excludecomment{versionoutside}
+\includecomment{versionbeta}
+
+\AtBeginShipoutFirst{\special{pdf:tounicode EUC-UCS2}} 
+\definecolor{iblue}{rgb}{0.363,0.387,0.617}
+\definecolor{imagenta}{rgb}{0.453,0.254,0.598}
+\definecolor{ilinkex}{rgb}{0.254,0.273,0.434}
+\definecolor{ilink}{rgb}{0.32,0.387,0.0625}
+\usepackage{makeidx}
+\usepackage[
+dvipdfmx, setpagesize=false,
+bookmarks, bookmarksopen, bookmarksnumbered,
+colorlinks, breaklinks,
+linkcolor=ilink,
+citecolor=ilink,
+filecolor=ilink,
+pagecolor=ilink,
+urlcolor=ilinkex,
+pdfstartview={FitH -32768},
+pdftitle={問題解決のためのプログラミング一巡り (2019)},
+pdfsubject={},
+pdfauthor={Tomoyuki Kaneko},
+pdfkeywords={}
+]{hyperref}
+
+\usepackage{tikz}
+
+\newtheorem{exercise}{練習}[chapter]{\itshape}{\rmfamily}
+\newcommand{\exercisetitle}[1]{\textrm{\textbf{[#1]}} }
+
+\pagestyle{fancy}
+\renewcommand{\chaptermark}[1]{\markboth{第~\normalfont\thechapter~章~#1}{}}
+
+\usepackage{icpcseminar}
+\usepackage{xparse}
+\forestset{eyes/.style={for tree={edge label={node[midway,left,font=\small]{yes}}}}}
+\forestset{eno/.style={for tree={edge label={node[midway,right,font=\small]{no}}}}}
+
+\usetikzlibrary{tikzmark}
+\usetikzmarklibrary{listings}
+\usepackage{pxpgfmark}
+
+\newcommand*{\bookname}[1]{参考書${}^{\mbox{\scriptsize#1}}$}
+\NewDocumentCommand\pccbook{o}{\bookname{}\IfValueTF{#1}{\cite[#1]{book:pcc}}{\cite{book:pcc}}}
+\NewDocumentCommand\pcaojbook{o}{\bookname{攻略}\IfValueTF{#1}{\cite[#1]{book:pcaoj}}{\cite{book:pcaoj}}}
+
+\setcounter{secnumdepth}{2}
+\newcommand{\blah}{\phantom{空欄}}
+
+\graphicspath{{figs/}}
+
+%\newcommand{\aojidnew}[1]{\url{https://onlinejudge.u-aizu.ac.jp/\#/problems/#1}}
+\newcommand{\aojidold}[1]{\url{http://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=#1&lang=jp}}
+\newcommand{\aojid}[1]{\aojidold{#1}}%\\\aojidnew{#1}
+
+\title{問題解決のためのプログラミング一巡り}
+\author{公開版 (CC BY 4.0) 金子 知適 (kaneko@acm.org)}
+\date{}
+
+\makeindex
+
+\begin{document}
+\maketitle
+
+\begin{versionoutside}
+ 
+\begin{abstract}
+この資料は，東京大学教養学部前期課程で開講されている全学自由研究ゼミナール「実践的プログラミング」の2019年までの配布資料を多少編集して，自習用資料として整形したものである．
+
+プログラミングやアルゴリズムを学ぶためには，教科書を読むだけでなく実際
+に作ることが有用である．
+幸いにも，作成したプログラムの「正しさ」を自動で判定する，
+オンラインジャッジというシステムが国内外で充実し，
+優れた自習環境が整いつつある．
+この資料は，それらで学ぶ敷居をもう少し下げて，
+入門の段階の学習者が問題解決の面
+白さを味わう手助けを行う意図で準備された．たとえば，ほとんどの
+例題には，穴を埋たり日本語で書かれた擬似コードをC++に翻訳するだけで完
+成するようなヒントが，用意されている．
+プログラミング言語の基本的な文法を理解していれば，
+ヒントを追いながら手法の流れを理解したり，入出力データでプログラムの正しさ
+をテストするなどの経験を積みながら，ヒントなしでもプログラムを組む力が身についてゆくと期待している．
+この資料自体は様々な点で作成途上のものであるが，手軽な資料が現状で少ないため，活用の機会もあるかもしれないと考えて2013年より公開している．
+\end{abstract}
+\end{versionoutside}
+
+
+\tableofcontents
+
+\input{introduction}
+
+\part{入門コース}
+
+\input{basics}
+
+
+\part{トピックス}
+
+\input{topics}
+
+\part{補遺}
+
+\begin{versionoutside}
+\chapter{おわりに}
+資料内の誤りや改善点などに気づかれた際は，筆者(kaneko@acm.org)まで連絡いただけると幸いである．
+現在までに多数のコメントと評価をいただいてきた．現時点で個別の謝意の表明は控えるが，ここに感謝の意を記したい．
+
+資料中のイメージイラストは，特に断りがなければ，
+\url{https://openclipart.org/}にてpublic domainで提供されている画像を拝借したものである．
+
+\vfill
+
+\begin{itembox}[r]{-}
+筆者がコンテスト形式のプログラミングの存在を知ったのは，2004年度の夏学
+期に，自主的な「勉強会」(冬学期以降は現「実践的プログラミング」)が増原准教授(当時)により始められた時であった．それ以降，
+ACM-ICPC OB/OG会の活動，ブログなどでの技術の交換，日本語のオンラインジャッ
+ジシステム(Aizu Online Judge)の公開，各大学でのオリジナルコンテストの開
+催，プログラミングコンテストチャレンジブックの出版，atcoder社の定期コンテストなど，
+日本の参加者のコミュニティの盛り上がりは著しい．
+一定以上のレベルの学習環境は現在までに充実していると思われるので，
+未経験者がより早く楽しめるレベルに達するような学習効率を高めることができれば，より発展すると期待している．
+\end{itembox}
+\end{versionoutside}
+
+
+\appendix
+\input{appendix}
+ 
+
+\begin{thebibliography}{99}
+\bibitem{book:aojcpp} 渡部~有隆，「オンラインジャッジではじめるC/C++
+プログラミング入門」，マイナビ，2014年, \url{https://book.mynavi.jp/ec/products/detail/id=25382}
+\bibitem{book:pcaoj} 渡部~有隆，「プログラミングコンテスト攻略のためのアルゴリズムとデータ構造」，マイナビ，2015年，\url{https://book.mynavi.jp/ec/products/detail/id=35408}
+\bibitem{book:pcc} 秋葉~拓哉，岩田~陽一，北川~宜稔，「プログラミングコンテストチャレンジブック」第二版，マイナビ，2012年, \url{https://book.mynavi.jp/ec/products/detail/id=22672}
+\bibitem{book:algorithmdesign} Jon~Kleinberg and Eva~Tardos, 
+「アルゴリズムデザイン」, (浅野~孝夫，浅野~泰仁，小野~孝男，平田~富夫訳)，共立出版，2008年, \url{http://www.kyoritsu-pub.co.jp/bookdetail/9784320122178}
+\bibitem{book:algorithmintroduction} T.コルメン，C.ライザーソン，
+R.リベスト，C.シュタイン，「アルゴリズムイントロダクション」
+  第3版 総合版, 
+(浅野~哲夫，岩野~和生，梅尾~博司，山下~雅史，和田~幸一訳)，近代科学社，
+  2013年, 
+\url{http://www.kindaikagaku.co.jp/information/kd0408.htm}
+\bibitem{book:cpp}
+  Bjarne Stroustrup, ``The C++ Programming Language'' (4th Edition),
+  Addison-Wesley Professional, 2013
+\end{thebibliography}
+
+
+\printindex
+
+\end{document}
